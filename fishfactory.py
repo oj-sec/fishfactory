@@ -2,7 +2,7 @@
 
 # Script to automate interactions with Fishfactory and result handling via Elasticsearch. 
 
-# Reads target and authorisation from the config.ini file, which can be manually populated or populated through the --config option. 
+# Reads target and authorisation from the config.ini file, which can be manually populated or populated through the -c option. 
 
 import argparse
 import requests
@@ -10,67 +10,6 @@ import json
 import warnings
 import os
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-def write_document(document):
-
-	config = read_config()
-
-	if config['documentWriteMode'].lower() == 'elastic':
-
-		status = send_to_elastic(document, config)
-
-	elif config['documentWriteMode'].lower() == 'local':
-
-		status = write_local(document)
-
-	return status
-
-def send_to_elastic(document, config):
-
-	response = requests.post(config['elasticUrl'], headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
-
-	# Intermediate storage of spotter and puller records to provide targets to kit processor. 
-	if document['recordType'] == 'spotter' or document['recordType'] == 'puller':
-
-		write_local(document)
-
-	if response.status_code == 200:
-		return True
-	else:
-		return False
-
-def write_local(document):
-
-	record_type = document['recordType']
-
-	match record_type:
-
-		case 'spotter':
-
-			outfile = "spotter_results"
-
-		case 'puller':
-
-			outfile = "puller_results"
-
-		case 'kitProcessor':
-
-			outfile = "../kit_processor_results"
-
-		case 'smartCredstore': 
-
-			outfile = "../credstore_processor_results"
-
-		case 'naiveCredstore':
-
-			outfile = "credstore_processor_results"
-
-	with open(outfile, 'a') as o:
-
-		json.dump(document, o)
-		o.write('\n')
-
-	return True
 
 # Function to generate config file. 
 def gen_config():
