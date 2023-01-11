@@ -10,6 +10,7 @@ import json
 import warnings
 import os
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Function to generate config file. 
 def gen_config():
@@ -75,17 +76,11 @@ class FishFactory:
 	def send_to_elastic(self, document):
 		config = self.get_attribute('config')
 
-		print(config)
-
 		document = json.loads(document.text)
-
-		print(config['elasticUrl'])
-		print(config['elasticApiKey'])
 
 		r = requests.post(config['elasticUrl'], headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
 
-		if r.status_code != 200:
-			print("Error sending result to Elasticsearch using details provided.")
+		print(r.text)
 
 if __name__ == "__main__":
 
