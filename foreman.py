@@ -180,6 +180,10 @@ def cleanup(mode='all'):
 		for filename in glob.glob("**/**"):
 			if filename.endswith(".record"):
 				os.remove(filename)
+		try:
+			shutil.rmtree("kits/temp")
+		except:
+			pass
 
 if __name__ == "__main__":
 	quit()

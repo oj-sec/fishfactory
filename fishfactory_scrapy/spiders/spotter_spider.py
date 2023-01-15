@@ -28,6 +28,7 @@ class SpotterSpider(scrapy.Spider):
 
         imgdata = base64.b64decode(response.data['png'])
         imghash = hashlib.sha256(imgdata).hexdigest()
+
         title = ""
         try:
             title = response.xpath('//title/text()').get()
@@ -37,12 +38,14 @@ class SpotterSpider(scrapy.Spider):
         spotter_record = {}
 
         if response.status == 200: 
+            with open('./images/' + imghash + '.png', 'wb') as  f:
+                f.write(imgdata)
             spotter_record['phishingUrl'] = response.url
             spotter_record['phishingDomain'] = urlparse(response.url).netloc
             spotter_record['phishingUrlTitle'] = title
             spotter_record['screenshotHash'] = imghash
-            spotter_record['screenshotData'] = response.data['png']
             spotter_record['phishingIp'] = ip
+            #spotter_record['screenshotData'] = response.data['png']
 
         return spotter_record
             
