@@ -32,6 +32,8 @@ Use the ```fishfactory.py``` script to interact with the Fishfactory web service
 
 If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance URI.
 
+Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `./images` directories on the host via shared volumes. Note that these files will be owned by root as per normal docker behavior.  
+
 # Planned features
 
 - deanonymising IPFS-based phishing infrastructure
