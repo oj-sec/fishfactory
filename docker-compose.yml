@@ -4,6 +4,10 @@ services:
         image: 0jsec/fishfactory:latest
         ports:
             - "5000:5000"
+        volumes:
+            - ./kits:/app/kits
+            #- ~/images:/app/imagaes
+            - ./credstores:/app/credstores
 
     splash:
         image: scrapinghub/splash:3.0

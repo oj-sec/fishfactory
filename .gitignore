@@ -1,1 +1,8 @@
 input_processor.py
+config.ini
+proxy-profiles
+aquarium
+iputs
+credstores/*
+kits/*
+images/*

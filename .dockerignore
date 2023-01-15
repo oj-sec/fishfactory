@@ -3,3 +3,7 @@ aquarium
 bank
 inputs
 README.md
+.config.ini
+./kits/*
+./credstores/*
+./images/*

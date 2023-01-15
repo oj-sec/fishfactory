@@ -4,7 +4,7 @@
 
 import json
 import processor
-import os
+import os, glob
 import shutil
 from scrapyscript import Job, Processor 
 from multiprocessing.pool import ThreadPool
@@ -131,7 +131,7 @@ def start(url):
 	kit_downloader = async_call_downloader.get()
 	brute_downloader = async_call_brute.get()
 
-	cleanup()
+	cleanup('records')
 
 	formatted_return = []
 	if basic_reconaissance:
@@ -159,19 +159,27 @@ def rollup_results(directory):
 	return rolled_results
 	
 # Function to clean up directories and reset state between runs. 
-def cleanup():
+# Can optionally pass the 'records' param to only cleanup records.
+def cleanup(mode='all'):
 
-	try:
-		shutil.rmtree("kits")
-		shutil.rmtree("credstores")
-	except:
-		pass
+	if mode == 'all':
 
-	try:
-		os.mkdir("kits")
-		os.mkdir("credstores")
-	except:
-		pass
+		try:
+			shutil.rmtree("kits")
+			shutil.rmtree("credstores")
+		except:
+			pass
+		try:
+			os.mkdir("kits")
+			os.mkdir("credstores")
+		except:
+			pass
+
+	elif mode == 'records':
+
+		for filename in glob.glob("**/**"):
+			if filename.endswith(".record"):
+				os.remove(filename)
 
 if __name__ == "__main__":
 	quit()

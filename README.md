@@ -17,7 +17,7 @@ Fishfactory is intended to be deployed via the included docker-compose file.
 
 Pull the repository and run ```docker-compose up``` in the project directory. 
 
-The Fishfactory API will start listening on `localhost:5000`. The API currently has a single endpoint at `/fishfactory/submit_url` which consumes a POSTed dictionary and uses the value of key "url" as the target URL.
+The Fishfactory API will start listening on `localhost:5000`. The API currently has a single endpoint at `/fishfactory/submit_url` which consumes a POSTed JSON dictionary and uses the value of key "url" as the target URL.
 
 # Usage
 
@@ -26,7 +26,9 @@ Use the ```fishfactory.py``` script to interact with the Fishfactory web service
 - Process a single URL using `python3 fishfactory.py -u "http://definitelynotmalicious.live"`
 - Read URLs from a newline delimited file using `python3 fishfactory.py -f inputfile.txt`
 
-`fishfactory.py` will output to stdout by default, but will optionally also forward results to your Elasticsearch instance if the `-e` flag is passed.
+# Outputs
+
+`fishfactory.py` will output results to stdout by default, but will optionally also forward results to your Elasticsearch instance if the `-e` flag is passed.
 
 If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance URI.
 

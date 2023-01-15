@@ -78,9 +78,9 @@ class FishFactory:
 
 		document = json.loads(document.text)
 
-		r = requests.post(config['elasticUrl'], headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
-
-		print(r.text)
+		if document['meta']['responseType'] == 'success':
+			r = requests.post(config['elasticUrl'], headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
+			print(r.text)
 
 if __name__ == "__main__":
 
