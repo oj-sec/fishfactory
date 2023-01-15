@@ -127,7 +127,7 @@ def call_ipfs_module(cids):
 	results = []
 
 	for cid in cids:
-		response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip())
+		response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip(), timeout=1000)
 		response = json.loads(response.text)
 		if response['meta']['resultType'] == 'success':
 			for result in response['results']:
@@ -135,8 +135,9 @@ def call_ipfs_module(cids):
 
 	if results:
 		ipfs_deanonymisation['module'] = 'ipfs-deanonymisation'
-		ipfs_deanonymisation['ipfsProvidersDeanonymised'] = len(results)
-		ipfs_deanonymisation['recordData'] = results
+		ipfs_deanonymisation['recordData'] = {}
+		ipfs_deanonymisation['recordData']['ipfsProvidersDeanonymised'] = len(results)
+		ipfs_deanonymisation['recordData']['ipfsProviderIdentities'] = results
 
 	return ipfs_deanonymisation
 

@@ -211,12 +211,11 @@ def cycle_targets(targets):
 						pass
 				except:
 					pass
-			if len(emails) > 0: 
-				bulk_result['kitUrl'] = target['kitUrl']
-				bulk_result['recordType'] = 'kitProcessor'
-				bulk_result['kitContainedEmails'] = emails
-				bulk_result['kitReferencedTextFiles'] = text_files
-				bulk_result['kitReferencedFileStructure'] = process_file_structure(zip_contents)
+			bulk_result['kitUrl'] = target['kitUrl']
+			bulk_result['recordType'] = 'kitProcessor'
+			bulk_result['kitContainedEmails'] = emails
+			bulk_result['kitReferencedFileStructure'] = process_file_structure(zip_contents)
+			bulk_result['kitReferencedTextFiles'] = text_files
 			if len(text_files) > 0:
 				bulk_result['credstores'] = pull_text_files(bulk_result)
 			else:
