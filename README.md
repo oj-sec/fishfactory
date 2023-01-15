@@ -4,12 +4,15 @@ Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfac
 
 # Features
 
-- conducts basic reconnaissance of lure pages
-- walks back phishing URLs to find open directories and ZIP phishing kits
-- processes PHP files in kits to extract intelligence and identify references to phishing credential stores
-- runs a naive credential stores finder against targets to look for common credential stores locations
-- processes emails from any credential stores located
-- facilitates easy bulk inputs and transportation of documents to Elasticsearch
+- standard functions:
+	- conducts basic reconnaissance of lure pages
+	- walks back phishing URLs to find open directories and ZIP phishing kits
+	- processes PHP files in kits to extract intelligence and identify references to phishing credential stores
+	- runs a naive credential store finder against targets to look for common credential stores locations
+	- processes emails from any credential stores located
+	- facilitates easy bulk inputs and transportation of documents to Elasticsearch
+- additional, optional functions for special cases:
+	- for phishing infrastructure delivered via IPFS web gateways, uses [IPFSEnricher](https://github.com/oj-sec/IPFSEnricher) to identify the IP addresses pushing the phishing content content to the IPFS network
 
 # Installation
 
@@ -36,6 +39,7 @@ Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `.
 
 # Planned features
 
-- deanonymising IPFS-based phishing infrastructure
+- attempting to deanonymise phishing infrastructure behind Cloudflare via favicon hash & SSL fingerprint
+- identifying aversary-in-the-middle and other more sophisticated phishing techniques
 - parsing references to Telegram bots from phishing kits
 - machine learning image classification on lure screenshots
