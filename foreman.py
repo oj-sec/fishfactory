@@ -6,6 +6,7 @@ import json
 import processor
 import os, glob
 import shutil
+import requests
 from scrapyscript import Job, Processor 
 from multiprocessing.pool import ThreadPool
 import fishfactory_scrapy.spiders.spotter_spider
@@ -52,9 +53,9 @@ def call_spotter_spider(url):
 	proc = Processor(settings=global_scrapy_settings_object)
 
 	spotter_job = Job(fishfactory_scrapy.spiders.spotter_spider.SpotterSpider, url=url)
-	spotter_result = proc.run(spotter_job)[0]
-
-	if not spotter_result:
+	try:
+		spotter_result = proc.run(spotter_job)[0]
+	except:
 		return
 
 	basic_reconaissance = {}
@@ -117,19 +118,62 @@ def call_brute_spider(url):
 
 	return brute_downloader_outer
 
+# Function to invoke the ipfs deanonymisation submodule and return a dictionary of the response.
+def call_ipfs_module(cids):
+
+	ipfs_deanonymisation = {}
+
+	results = []
+
+	for cid in cids:
+		response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip())
+		response = json.loads(response.text)
+		if response['meta']['resultType'] == 'success':
+			for result in response['results']:
+				results.append(result)
+
+	if results:
+		ipfs_deanonymisation['module'] = 'ipfs-deanonymisation'
+		ipfs_deanonymisation['ipfsProvidersDeanonymised'] = len(results)
+		ipfs_deanonymisation['recordData'] = results
+
+	return ipfs_deanonymisation
+
+
+# Function to identify which optional submodules should be run against the target
+def identify_optional_submodules(url):
+
+	optional_submodules = {}
+
+	# IPFS submodule
+	ipfs_domains  = ["ipfs.io", "dweb.link", "gateway.ipfs.io", "ninetailed.ninja", "via0.com", "ipfs.eternum.io", "hardbin.com", "cloudflare-ipfs.com", "astyanax.io", "cf-ipfs.com", "ipns.co", "gateway.originprotocol.com", "gateway.pinata.cloud", "ipfs.sloppyta.co", "ipfs.busy.org", "ipfs.greyh.at", "gateway.serph.network", "jorropo.net", "ipfs.fooock.com", "cdn.cwinfo.net", "aragon.ventures", "permaweb.io", "ipfs.best-practice.se", "storjipfs-gateway.com", "ipfs.runfission.com", "ipfs.trusti.id", "ipfs.overpi.com", "ipfs.ink", "ipfsgateway.makersplace.com", "ipfs.funnychain.co", "ipfs.telos.miami", "ipfs.mttk.net", "ipfs.fleek.co", "ipfs.jbb.one", "ipfs.yt", "hashnews.k1ic.com", "ipfs.drink.cafe", "ipfs.kavin.rocks", "ipfs.denarius.io", "crustwebsites.net", "ipfs0.sjc.cloudsigma.com", "ipfs.genenetwork.org", "ipfs.eth.aragon.network", "ipfs.smartholdem.io", "ipfs.xoqq.ch", "natoboram.mynetgear.com", "video.oneloveipfs.com", "ipfs.anonymize.com", "ipfs.scalaproject.io", "search.ipfsgate.com", "ipfs.decoo.io", "alexdav.id", "ipfs.uploads.nu", "hub.textile.io", "ipfs1.pixura.io", "ravencoinipfs-gateway.com", "konubinix.eu", "ipfs.tubby.cloud", "ipfs.lain.la", "ipfs.kaleido.art", "ipfs.slang.cx", "ipfs.arching-kaos.com", "storry.tv", "ipfs.1-2.dev", "dweb.eu.org", "permaweb.eu.org", "ipfs.namebase.io", "ipfs.tribecap.co", "ipfs.kinematiks.com", "c4rex.co", "nftstorage.link", "gravity.jup.io", "fzdqwfb5ml56oadins5jpuhe6ki6bk33umri35p5kt2tue4fpws5efid.onion", "tth-ipfs.com", "ipfs.chisdealhd.co.uk", "ipfs.alloyxuast.tk", "ipfs.litnet.work", "ipfs-gateway.cloud", "w3s.link", "cthd.icu", "ipfs.joaoleitao.org", "ipfs.tayfundogdas.me", "ipfs.jpu.jp"]
+	for domain in ipfs_domains:
+		if domain in url:
+			cid = parse_cid_from_url(url)
+			optional_submodules['IPFS'] = cid
+
+	return optional_submodules
+
 # Entrypoint & main execution handler. 
 def start(url):
 
+	# Identify which submodules to run against the input
+	relevant_optional_submodules = identify_optional_submodules(url)
+
 	# Create threadpool to aynchronously call submodules. 
-	pool = ThreadPool(processes=3)
+	pool = ThreadPool(processes=4)
 
 	async_call_spotter = pool.apply_async(call_spotter_spider, (url,))
 	async_call_downloader = pool.apply_async(call_downloader_spider, (url,))
 	async_call_brute = pool.apply_async(call_brute_spider, (url,)) 
+	if "IPFS" in relevant_optional_submodules.keys():
+		async_call_ipfs = pool.apply_async(call_ipfs_module, (relevant_optional_submodules['IPFS'],))
 
 	basic_reconaissance = async_call_spotter.get()
 	kit_downloader = async_call_downloader.get()
 	brute_downloader = async_call_brute.get()
+	if async_call_ipfs:
+		ipfs_deanonymisation = async_call_ipfs.get()
 
 	cleanup('records')
 
@@ -140,6 +184,8 @@ def start(url):
 		formatted_return.append(kit_downloader)
 	if brute_downloader:
 		formatted_return.append(brute_downloader)
+	if ipfs_deanonymisation:
+		formatted_return.append(ipfs_deanonymisation)
 
 	return formatted_return
 
@@ -157,6 +203,27 @@ def rollup_results(directory):
 				rolled_results.append(result)
 
 	return rolled_results
+
+# Function to parse and IPFS CID from a URL containing an IPFS gateway domain.
+def parse_cid_from_url(url):
+
+	cids = []
+
+	# Account for case where web gateway uses subdomain to address CID
+	url_chunks = url.split('.')
+
+	# Account for case where web gateway uses a url endpoint to address CID
+	url_chunks = url_chunks + url.split('/')
+
+	for chunk in url_chunks:
+		if chunk.startswith("Qm") and len(chunk) == 46:
+			cids.append(chunk)
+		elif chunk.startswith("bafy") and len(chunk) > 55:
+			cids.append(chunk)
+
+	cids = list(dict.fromkeys(cids))
+
+	return cids
 	
 # Function to clean up directories and reset state between runs. 
 # Can optionally pass the 'records' param to only cleanup records.

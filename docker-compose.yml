@@ -22,5 +22,8 @@ services:
             - ./proxy-profiles:/etc/splash/proxy-profiles:ro
             - ./filters:/etc/splash/filters:ro
 
+    ipfs_enricher:
+        image: 0jsec/ipfs_enricher:latest
+        
 
     

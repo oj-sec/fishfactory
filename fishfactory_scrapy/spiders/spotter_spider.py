@@ -40,7 +40,7 @@ class SpotterSpider(scrapy.Spider):
             sock.settimeout(3)
 
             ctx = ssl.create_default_context()
-            phishing_hostname = urlparse(url).netloc
+            phishing_hostname = urlparse(response.url).netloc
             wrappedSocket = ctx.wrap_socket(sock, server_hostname=phishing_hostname)
 
             try:
