@@ -7,6 +7,7 @@ import processor
 import os, glob
 import shutil
 import requests
+import re
 from scrapyscript import Job, Processor 
 from multiprocessing.pool import ThreadPool
 import fishfactory_scrapy.spiders.spotter_spider
@@ -166,12 +167,14 @@ def start(url):
 	async_call_spotter = pool.apply_async(call_spotter_spider, (url,))
 	async_call_downloader = pool.apply_async(call_downloader_spider, (url,))
 	async_call_brute = pool.apply_async(call_brute_spider, (url,)) 
+	async_call_ipfs = None
 	if "IPFS" in relevant_optional_submodules.keys():
 		async_call_ipfs = pool.apply_async(call_ipfs_module, (relevant_optional_submodules['IPFS'],))
 
 	basic_reconaissance = async_call_spotter.get()
 	kit_downloader = async_call_downloader.get()
 	brute_downloader = async_call_brute.get()
+	ipfs_deanonymisation = None
 	if async_call_ipfs:
 		ipfs_deanonymisation = async_call_ipfs.get()
 
@@ -210,10 +213,7 @@ def parse_cid_from_url(url):
 	cids = []
 
 	# Account for case where web gateway uses subdomain to address CID
-	url_chunks = url.split('.')
-
-	# Account for case where web gateway uses a url endpoint to address CID
-	url_chunks = url_chunks + url.split('/')
+	url_chunks = re.split("/|\.", url)
 
 	for chunk in url_chunks:
 		if chunk.startswith("Qm") and len(chunk) == 46:

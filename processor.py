@@ -219,6 +219,8 @@ def cycle_targets(targets):
 				bulk_result['kitReferencedFileStructure'] = process_file_structure(zip_contents)
 			if len(text_files) > 0:
 				bulk_result['credstores'] = pull_text_files(bulk_result)
+			else:
+				bulk_result['credstores'] = []
 			if bulk_result: 
 				return(bulk_result)				
 
