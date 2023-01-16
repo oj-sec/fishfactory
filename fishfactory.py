@@ -65,7 +65,7 @@ class FishFactory:
 		if not fishfactory_location.startswith('http'):
 			fishfactory_location = "http://" + fishfactory_location
 
-		r = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url}, timeout=180)
+		r = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url}, timeout=150)
 		print(r.text)
 		
 		elastic = self.get_attribute('elastic')

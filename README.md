@@ -1,6 +1,6 @@
 # Fishfactory
 
-Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfactory is intended to automate the low hanging fruit intelligence pivots for phishing infrastructure to give users insight into the mechanics and scope of phishing attacks impacting them.  
+Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfactory is intended to automate the low hanging fruit intelligence pivots for credential phishing infrastructure to give users insight into the mechanics and scope of phishing attacks impacting them.  
 
 # Features
 

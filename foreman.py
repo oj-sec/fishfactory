@@ -76,7 +76,7 @@ def call_downloader_spider(url):
 
 	processor_targets = rollup_results('./kits')
 	processor_results = processor.start(processor_targets)
-
+		
 	kit_downloader_outer = {}	
 	if processor_targets:
 		kit_downloader = {}
@@ -87,12 +87,13 @@ def call_downloader_spider(url):
 			temp['kitUrl'] = processor_target['kitUrl']
 			temp['kitHash'] = processor_target['kitHash']
 			for processor_result in processor_results:
-				if processor_result['kitUrl'] == processor_target['kitUrl']:
-					temp['kitContainedEmails'] = processor_result['kitContainedEmails']
-					temp['kitReferencedTextFiles'] = processor_result['kitReferencedTextFiles']
-					temp['kitReferencedFileStructure'] = processor_result['kitReferencedFileStructure']
-					temp['credstoresDownloaded'] = len(processor_result['credstores'])
-					temp['credstoreRecords'] = processor_result['credstores']
+				if processor_result:
+					if processor_result['kitUrl'] == processor_target['kitUrl']:
+						temp['kitContainedEmails'] = processor_result['kitContainedEmails']
+						temp['kitReferencedTextFiles'] = processor_result['kitReferencedTextFiles']
+						temp['kitReferencedFileStructure'] = processor_result['kitReferencedFileStructure']
+						temp['credstoresDownloaded'] = len(processor_result['credstores'])
+						temp['credstoreRecords'] = processor_result['credstores']
 			kit_records.append(temp) 
 		kit_downloader['kitRecords'] = kit_records 
 		kit_downloader_outer['module'] = 'zip-kit-handler'
@@ -107,6 +108,8 @@ def call_brute_spider(url):
 	proc = Processor(settings=global_scrapy_settings_object)
 
 	brute_job = Job(fishfactory_scrapy.spiders.brute_spider.BruteSpider, url=url)
+	proc.run(brute_job)
+
 	brute_results = rollup_results('./credstores')
 
 	brute_downloader_outer = {}
@@ -127,11 +130,12 @@ def call_ipfs_module(cids):
 	results = []
 
 	for cid in cids:
-		response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip(), timeout=1000)
+		response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip())
 		response = json.loads(response.text)
 		if response['meta']['resultType'] == 'success':
 			for result in response['results']:
-				results.append(result)
+				if result['IPAdresses']:
+					results.append(result)
 
 	if results:
 		ipfs_deanonymisation['module'] = 'ipfs-deanonymisation'
@@ -158,6 +162,8 @@ def identify_optional_submodules(url):
 
 # Entrypoint & main execution handler. 
 def start(url):
+
+	# Basic connectivity check to return immediately if no DNS record exists
 
 	# Identify which submodules to run against the input
 	relevant_optional_submodules = identify_optional_submodules(url)

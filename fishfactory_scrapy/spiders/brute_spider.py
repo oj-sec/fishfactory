@@ -103,7 +103,7 @@ class BruteSpider(scrapy.Spider):
             credstore_hash = hashlib.sha256(response.text.encode('utf-8')).hexdigest()
 
             if emails:
-                with open("credstores/" + credstore_hash, 'w') as c:
+                with open("credstores/" + credstore_hash, 'wb') as c:
                     c.write(response.body)
 
                 brute_record = {
@@ -112,5 +112,5 @@ class BruteSpider(scrapy.Spider):
                     'containedEmails': emails
                 }
 
-            with open('credstores/' + kithash + '.record', 'w') as r:
-                json.dump(brute_record, r)
+                with open('credstores/' + credstore_hash + '.record', 'w') as r:
+                    json.dump(brute_record, r)
