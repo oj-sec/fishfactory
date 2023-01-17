@@ -7,6 +7,8 @@ import processor
 import os, glob
 import shutil
 import requests
+from urllib.parse import urlparse 
+import socket
 import re
 from scrapyscript import Job, Processor 
 from multiprocessing.pool import ThreadPool
@@ -38,13 +40,13 @@ global_scrapy_settings_object = {
 	"HTTPCACHE_STORAGE" : 'scrapy_splash.SplashAwareFSCacheStorage',
 	"RETRY_TIME" : 1,
 	"CONCURRENT_REQUESTS" : 150,
-	"DNS_TIMEOUT" : 5,
+	"DNS_TIMEOUT" : 6,
 	"DOWNLOAD_TIMEOUT" : 30,
 	"LOG_LEVEL" : 'INFO',
 	"COOKIES_ENABLED" : True,
 	"RETRY_ENABLED" : False,
 	"REDIRECT_ENABLED" : True,
-	"CONCURRENT_REQUESTS_PER_DOMAIN" : 5
+	"CONCURRENT_REQUESTS_PER_DOMAIN" : 5,
 }
 
 # Function to call the spotter spider and return a dictionary of the results.
@@ -69,6 +71,7 @@ def call_spotter_spider(url):
 def call_downloader_spider(url):
 
 	global global_scrapy_settings_object
+
 	proc = Processor(settings=global_scrapy_settings_object)
 
 	downloader_job = Job(fishfactory_scrapy.spiders.downloader_spider.DownloaderSpider, url=url)
@@ -130,12 +133,16 @@ def call_ipfs_module(cids):
 	results = []
 
 	for cid in cids:
-		response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip())
-		response = json.loads(response.text)
-		if response['meta']['resultType'] == 'success':
-			for result in response['results']:
-				if result['IPAdresses']:
-					results.append(result)
+		try:
+			response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip(), timeout=45)
+			response = json.loads(response.text)
+			if response['meta']['resultType'] == 'success':
+				for result in response['results']:
+					if 'IPaddresses' in result.keys():
+						results.append(result)
+		except requests.exceptions.Timeout:
+			return ipfs_deanonymisation
+
 
 	if results:
 		ipfs_deanonymisation['module'] = 'ipfs-deanonymisation'
@@ -164,6 +171,14 @@ def identify_optional_submodules(url):
 def start(url):
 
 	# Basic connectivity check to return immediately if no DNS record exists
+	domain = urlparse(url).netloc
+	ip = None
+	try:
+		ip = socket.gethostbyname(domain)
+	except:
+		pass
+	if not ip:
+		return 1
 
 	# Identify which submodules to run against the input
 	relevant_optional_submodules = identify_optional_submodules(url)

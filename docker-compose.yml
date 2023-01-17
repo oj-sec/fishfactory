@@ -9,7 +9,7 @@ services:
             - ./kits:/app/kits
             - ./images:/app/images
             - ./credstores:/app/credstores
-
+            
     splash:
         image: scrapinghub/splash:3.0
         command: --max-timeout 3600 --slots 5 --maxrss 3000 --verbosity 1
@@ -24,6 +24,4 @@ services:
 
     ipfs_enricher:
         image: 0jsec/ipfs_enricher:latest
-        
-
     

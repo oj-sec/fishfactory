@@ -7,24 +7,21 @@ import time
 import re
 
 class BruteSpider(scrapy.Spider):
+    handle_httpstatus_list = [400,401,402,403,404,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,420,421,422,423,424,425,426,428,429,430,431,440,444,449,450,451,451,460,463,494,495,496,497,498,499,499,500,501,502,503,504,505,506,507,508,509,510,511,520,521,522,523,524,525,526,527,529,530,530,561,598,599]
     name = 'brute'
 
     def start_requests(self):
         url = self.url        
         yield scrapy.Request(url=url, callback=self.check_brute, meta={'orig_url': url})
 
-    # Initiate brute forcing for credstores only if the primary URL is responsive to avoid redundant requests to dead infrastructure. 
     def check_brute(self, response):
 
         self.hunt_credstore(response)
+        #if response.status < 400:
 
-        if response.status < 400:
-
-            credstore_targets = self.generate_credstore_walkbacks(response.url)
-
-            for target in credstore_targets:
-                
-                yield scrapy.Request(url=target, callback=self.hunt_credstore, meta={'orig_url': response.url})
+        credstore_targets = self.generate_credstore_walkbacks(response.url)
+        for target in credstore_targets:
+            yield scrapy.Request(url=target, callback=self.hunt_credstore, meta={'orig_url': response.url})
 
     # Breaks up URL into target endpoints to search for credstores based on common formats. 
     def generate_credstore_walkbacks(self, url):

@@ -61,7 +61,7 @@ class SpotterSpider(scrapy.Spider):
 
         spotter_record = {}
 
-        if response.status == 200: 
+        if response.status < 500: 
             with open('./images/' + imghash + '.png', 'wb') as  f:
                 f.write(imgdata)
             spotter_record['phishingUrl'] = response.url

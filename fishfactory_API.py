@@ -20,10 +20,15 @@ def submit_uri():
 	formatted_return['meta']['endpoint'] = 'fishfactory/submit_uri'
 	formatted_return['meta']['requestTime'] = str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat())
 	
-	formatted_return['meta']['responseType'] = 'success'
 	url = request.get_json()['url']
 	formatted_return['meta']['query'] = url
-	formatted_return['records'] = foreman.start(url)
+	records = foreman.start(url)
+
+	if records == 1:
+		formatted_return['meta']['responseType'] = "DNS error"
+	else:
+		formatted_return['records'] = records
+		formatted_return['meta']['responseType'] = 'success'
 
 #	try:
 #		formatted_return['meta']['responseType'] = 'success'
