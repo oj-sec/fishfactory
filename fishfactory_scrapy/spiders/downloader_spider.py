@@ -55,13 +55,6 @@ class DownloaderSpider(scrapy.Spider):
         for i in range(len(targets)):
             targets[i] = prefix + targets[i]
 
-        with open("./kits/DEBUG", 'a') as f:
-            f.write(str(len(targets)))
-            f.write("\n")
-            for target in targets:
-                f.write(target)
-                f.write("\n")
-
         return targets
 
     def hunt_kit(self, response):
