@@ -3,10 +3,11 @@ import scrapy
 import socket
 import ssl
 import hashlib
-import codecs
+import base64
 import mmh3
 import requests
 from scrapy_splash import SplashRequest
+from scrapy.linkextractors import LinkExtractor
 from urllib.parse import urlparse, urljoin
 
 class SpotterSpider(scrapy.Spider):
@@ -63,17 +64,19 @@ class SpotterSpider(scrapy.Spider):
             pass
 
         # Retrieve and murmurhash favicon
+        #favicon_hash = ""
         favicon_hash = ""
-        hrefs = response.xpath('//@href').getall()
-        for href in hrefs:
-            if "favicon" in hrefs or href.endswith('.ico'):
-                favicon_location = urljoin(response.url, href)
-                favicon_data = ''
-                headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"}
-                favicon_data = requests.get(favicon_location, headers=headers)                
-                if favicon_data.content:
-                    favicon_data = codecs.encode(favicon_data.content, "base64")
-                    favicon_hash = mmh3.hash(favicon_data) 
+        href = response.xpath('//*[@rel="icon"]').get()
+        if not href:
+            hrefs = response.xpath('//*[@rel="shortcut icon"]').get()
+        #hrefs_static = response.xpath('//@href').getall()
+        favicon_location = urljoin(response.url, href)
+        favicon_data = ''
+        headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"}
+        favicon_data = requests.get(favicon_location, headers=headers)                
+        if favicon_data.content:
+            favicon_data = base64.encodebytes(favicon_data.content)
+            favicon_hash = mmh3.hash(favicon_data)
 
         spotter_record = {}
 
