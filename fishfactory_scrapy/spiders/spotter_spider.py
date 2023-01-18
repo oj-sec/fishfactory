@@ -64,19 +64,41 @@ class SpotterSpider(scrapy.Spider):
             pass
 
         # Retrieve and murmurhash favicon
-        #favicon_hash = ""
-        favicon_hash = ""
-        href = response.xpath('//*[@rel="icon"]').get()
-        if not href:
-            hrefs = response.xpath('//*[@rel="shortcut icon"]').get()
-        #hrefs_static = response.xpath('//@href').getall()
-        favicon_location = urljoin(response.url, href)
-        favicon_data = ''
-        headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"}
-        favicon_data = requests.get(favicon_location, headers=headers)                
-        if favicon_data.content:
-            favicon_data = base64.encodebytes(favicon_data.content)
-            favicon_hash = mmh3.hash(favicon_data)
+        favicon_hashes = []
+        hrefs = []
+        # Handle favicon referenced by rel tag case
+        rel_tag = response.xpath('//*[@rel="icon" or @rel="sortcut icon"]/@href').get()
+        if rel_tag:
+            hrefs.append(rel_tag)
+        # Handle favicon.ico in web root case
+        if response.url.startswith("https://"):
+            hrefs.append("https://" + str(urlparse(response.url).netloc) + "/favicon.ico")
+        elif response.url.startswith("http://"):
+            hrefs.append("https://" + str(urlparse(response.url).netloc) + "/favicon.ico")
+        # Handle a favicon loaded via href
+        all_refs = response.xpath('//@href').getall()
+        for ref in all_refs:
+            if "favicon" in ref or ref.endswith(".ico"):
+                hrefs.append(ref)
+        if hrefs:
+            for href in hrefs:
+                # Ensure absolute path
+                if not href.startswith("http"):
+                    href = urljoin(response.url, href)
+                favicon_data = ''
+                headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"}
+                favicon_data = requests.get(href, headers=headers)                
+                if favicon_data.content:
+                    favicon_data = base64.encodebytes(favicon_data.content)
+                    favicon_hash = mmh3.hash(favicon_data)
+                else:
+                    favicon_data = ""
+                    favicon_hash = ""
+                temp = {}
+                temp['faviconURI'] = href
+                temp['faviconURIType'] = str(type(href))
+                temp['faviconHash'] = favicon_hash
+                favicon_hashes.append(temp)
 
         spotter_record = {}
 
@@ -89,7 +111,7 @@ class SpotterSpider(scrapy.Spider):
             spotter_record['screenshotHash'] = imghash
             spotter_record['phishingIp'] = ip
             spotter_record['sslFingerprint'] = ssl_fingerprint
-            spotter_record['faviconHash'] = favicon_hash
+            spotter_record['faviconData'] = favicon_hashes
             #spotter_record['screenshotData'] = response.data['png']
 
         return spotter_record
