@@ -2,7 +2,7 @@
 
 # API interface for Fishfactory
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import datetime
 import foreman
 
@@ -19,8 +19,12 @@ def submit_uri():
 	formatted_return['meta'] = {}
 	formatted_return['meta']['endpoint'] = 'fishfactory/submit_uri'
 	formatted_return['meta']['requestTime'] = str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat())
-	
-	url = request.get_json()['url']
+
+	try:
+		url = request.form.get('url')
+	except:
+		url = request.get_json()['url']
+
 	formatted_return['meta']['query'] = url
 	records = foreman.start(url)
 
@@ -39,6 +43,34 @@ def submit_uri():
 #		formatted_return['meta']['responseType'] = 'error'
 
 	return formatted_return
+
+
+# Function to present a HTML entry form to allow manual entry without the command line
+@app.route("/fishfactory/", methods=['GET', 'POST'])
+def serve_ui():
+
+#	if request.method == "POST":
+#		url = request.form.get("urlinput")
+#		records = foreman.start(url)
+#		formatted_return = retun_builder(url, '/fishfactory/', records)
+#		return formatted_return
+
+	return render_template('index.html')
+
+# Function to build formatted return JSON objects
+def retun_builder(query, endpoint, records):
+
+	formatted_return = {}
+	formatted_return['meta'] = {}
+	formatted_return['meta']['endpoint'] = endpoint
+	formatted_return['meta']['requestTime'] = str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat())
+	formatted_return['meta']['query'] = query
+
+	if records == 1:
+		formatted_return['meta']['responseType'] = "DNS error"
+	else:
+		formatted_return['records'] = records
+		formatted_return['meta']['responseType'] = 'success'
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', port=5000)
