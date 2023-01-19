@@ -20,7 +20,7 @@ Fishfactory is intended to be deployed via the included docker-compose file.
 
 Pull the repository and run ```docker-compose up``` in the project directory. 
 
-The Fishfactory API will start listening on `localhost:5000`. The API currently has a single endpoint at `/fishfactory/submit_url` which consumes a POSTed JSON dictionary and uses the value of key "url" as the target URL.
+The Fishfactory API will start listening on `localhost:5000`. The API's main endpoint,  `/fishfactory/submit_url`,  consumes a POSTed JSON dictionary and uses the value of key "url" as the target URL. A very simple webUI is also served at `/fishfactory`.
 
 # Usage
 
@@ -28,6 +28,8 @@ Use the ```fishfactory.py``` script to interact with the Fishfactory web service
 
 - Process a single URL using `python3 fishfactory.py -u "http://definitelynotmalicious.live"`
 - Read URLs from a newline delimited file using `python3 fishfactory.py -f inputfile.txt`
+
+Alternatively, submit a single URL at a time via the webUI.
 
 # Outputs
 
