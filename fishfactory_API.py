@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request, render_template
 import datetime
 import foreman
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 
 # Function to expose an API endpoint to consume a single URI as JSON input and return a JSON object containing the results of all fishfactory subroutines.
