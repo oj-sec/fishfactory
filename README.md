@@ -13,6 +13,7 @@ Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfac
 	- facilitates easy bulk inputs and transportation of documents to Elasticsearch
 - Additional, optional functions for special cases:
 	- for phishing infrastructure delivered via IPFS web gateways, uses [IPFSEnricher](https://github.com/oj-sec/IPFSEnricher) to identify the IP addresses pushing the phishing content content to the IPFS network as additional IOCs
+	- for phishing infrastructure behind Cloudflare, queries the Shodan API for hosts bearing the same favicon and/or SSL certificate, returning if there are five or less hosts bearing the identifier. Requires a Shodan API key. 
 
 # Installation
 
@@ -35,13 +36,12 @@ Alternatively, submit a single URL at a time via the webUI.
 
 `fishfactory.py` will output results to stdout by default, but will optionally also forward results to your Elasticsearch instance if the `-e` flag is passed.
 
-If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance URI.
+If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance (including index endpoint) URI. The configuration file can also be used to specify a custom API location and provide your Shodan API key. Both features are included in the interactive prompt.
 
 Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `./images` directories on the host via shared volumes. Note that these files will be owned by root as per normal docker behavior.  
 
 # Planned features
 
-- attempting to deanonymise phishing infrastructure behind Cloudflare via favicon hash & SSL fingerprint searches against the Shodan API
-- identifying aversary-in-the-middle and related, sophisticated phishing techniques
 - parsing references to Telegram bots from phishing kits
+- identifying aversary-in-the-middle and related, sophisticated phishing techniques
 - machine learning image classification on lure screenshots
