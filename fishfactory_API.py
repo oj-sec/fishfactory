@@ -20,13 +20,22 @@ def submit_uri():
 	formatted_return['meta']['endpoint'] = 'fishfactory/submit_uri'
 	formatted_return['meta']['requestTime'] = str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat())
 
-	try:
-		url = request.form.get('url')
-	except:
+	url = request.form.get('url')
+	if not url:
 		url = request.get_json()['url']
 
+	extras = {}
+	shodan_key = request.form.get('shodanApiKey')
+	if not shodan_key:
+		try:
+			shodan_key = request.get_json()['shodanApiKey']
+		except:
+			pass
+	if shodan_key:
+		extras['shodanApiKey'] = shodan_key
+
 	formatted_return['meta']['query'] = url
-	records = foreman.start(url)
+	records = foreman.start(url, extras)
 
 	if records == 1:
 		formatted_return['meta']['responseType'] = "DNS error"

@@ -89,15 +89,21 @@ class SpotterSpider(scrapy.Spider):
                     href = urljoin(response.url, href)
                 favicon_data = ''
                 headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"}
-                favicon_data = requests.get(href, headers=headers) 
-                response_type = favicon_data.headers['content-type']               
-                if favicon_data.content and "image" in response_type:
-                    favicon_data_encoded = base64.encodebytes(favicon_data.content)
-                    favicon_hash = mmh3.hash(favicon_data_encoded)
-                    temp = {}
-                    temp['faviconURI'] = href
-                    temp['faviconHash'] = favicon_hash
-                    favicon_hashes.append(temp)
+                favicon_data = ""
+                #try:
+                favicon_data = requests.get(href, headers=headers, timeout=3, verify=False)
+                #except:
+                #    pass 
+                if favicon_data:
+                    response_type = favicon_data.headers['content-type']               
+                    if favicon_data.content and "image" in response_type:
+                        favicon_data_encoded = base64.encodebytes(favicon_data.content)
+                        favicon_hash = mmh3.hash(favicon_data_encoded)
+                        temp = {}
+                        temp['faviconURI'] = href
+                        temp['faviconHash'] = favicon_hash
+                        favicon_hashes.append(temp)
+
 
         spotter_record = {}
 

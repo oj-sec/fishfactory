@@ -12,10 +12,10 @@ import os
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-# Function to generate config file. 
+# Function to generate config via interactive prompt. 
 def gen_config():
 	config = {}
-	config['elasticUrl'] = input('Enter URL of target Elasticsearch instance:')
+	config['elasticUrl'] = input('Enter URL of target Elasticsearch instance and index:')
 	config['elasticApiKey'] = input('Enter API key for Elasticsearch instance:')
 	option = ""
 	while True:	
@@ -26,6 +26,15 @@ def gen_config():
 		config['fishfactoryAPILocation'] = input('Enter custom Fishfactory API location:')
 	else:
 		config['fishfactoryAPILocation'] = "localhost:5000"
+	while True:
+		option = input("Do you wish to endter a Shodan API key for extra enrichment? [Y/N]")
+		if option.lower() == 'y' or option.lower() == 'n':
+			break
+	if option.lower() == 'y':
+		config['shodanApiKey'] = input('Enter Shodan API key:')
+	else:
+		config['shodanApiKey'] = ""		
+
 	with open('config.ini', 'w') as c:
 		json.dump(config, c)
 
@@ -57,20 +66,22 @@ class FishFactory:
 	# Function to send a request to Fishfactory.
 	def request_to_fishfactory(self, url):
 		config = self.get_attribute('config')
+		extras = {}
 		if config:
-			fishfactory_location = config['fishfactoryAPILocation']
+			fishfactory_location = config['fishfactoryApiLocation']
+			extras['shodanApiKey'] = config['shodanApiKey']
 		else:
 			fishfactory_location = "localhost:5000"
 
 		if not fishfactory_location.startswith('http'):
 			fishfactory_location = "http://" + fishfactory_location
 
-		r = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url}, timeout=150)
-		print(r.text)
-		
+		response = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url, "extras":extras}, timeout=150)
+		print(response.text)
+
 		elastic = self.get_attribute('elastic')
 		if elastic:
-			self.send_to_elastic(r)
+			self.send_to_elastic(response)
 
 	# Function to send result documents to Elasticsearch.
 	def send_to_elastic(self, document):

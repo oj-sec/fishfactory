@@ -10,11 +10,13 @@ import requests
 from urllib.parse import urlparse 
 import socket
 import re
+import whois
 from scrapyscript import Job, Processor 
 from multiprocessing.pool import ThreadPool
 import fishfactory_scrapy.spiders.spotter_spider
 import fishfactory_scrapy.spiders.downloader_spider
 import fishfactory_scrapy.spiders.brute_spider
+import shodan_api_wrapper
 
 global_scrapy_settings_object = {
 	"BOT_NAME" : 'fishfactory',
@@ -141,7 +143,7 @@ def call_ipfs_module(cids):
 					if 'IPaddresses' in result.keys():
 						results.append(result)
 		except requests.exceptions.Timeout:
-			return ipfs_deanonymisation
+			pass
 
 
 	if results:
@@ -152,6 +154,42 @@ def call_ipfs_module(cids):
 
 	return ipfs_deanonymisation
 
+# Function to invoke the Cloudflare deanonymiser modue and return a dictionary of the response. 
+def call_cloudflare_module(url, shodan_key, basic_reconaissance):
+
+	if not basic_reconaissance:
+		return
+
+	shodan = shodan_api_wrapper.ShodanApiWrapper(api_key=shodan_key)
+
+	favicons = []
+	favicons_data = basic_reconaissance['faviconData']
+	for item in favicons_data:
+		favicons.append("faviconHash")
+	
+	low_prevalence_favicons = []
+
+	if favicons:	
+		for favicon in favicons:
+			# Check whether favicon is low prevalence in Shodan observations
+			count = shodan.get_count('http.favicon.hash', favicon)
+			if count < 3:
+				temp = {}
+				ips = shodan.get_hosts('http.favicon.hash', favicon)
+				temp['favicon'] = favicon
+				temp['observedIPs'] = ips
+
+	ssl_fingerprint = basic_reconaissance['sslFingerprint']
+	hosts = shodan.get_hosts('ssl.cert.fingerprint', ssl_fingerprint)
+
+	cloudflare_deanonymisation = {}
+	if low_prevalence_favicons or hosts:
+		cloudflare_deanonymisation['module'] = 'cloudflare-deanonymisation'
+		cloudflare_deanonymisation['recordData'] = {}
+		cloudflare_deanonymisation['recordData']['faviconsObservedIPs'] = low_prevalence_favicons
+		cloudflare_deanonymisation['recordData']['sslCertObservedIPs'] = hosts
+
+	return cloudflare_deanonymisation
 
 # Function to identify which optional submodules should be run against the target
 def identify_optional_submodules(url):
@@ -165,10 +203,19 @@ def identify_optional_submodules(url):
 			cid = parse_cid_from_url(url)
 			optional_submodules['IPFS'] = cid
 
+	# Cloudflare deanonymiser submodule
+	domain = urlparse(url).netloc
+	ip = socket.gethostbyname(domain)
+	who = whois.whois(domain)
+	where = whois.whois(ip)
+	if "CLOUDFLARE" in [who.name, who.org, where.name, where.org]:
+		optional_submodules['cloudflareDeanonymiser'] = 0
+
 	return optional_submodules
 
 # Entrypoint & main execution handler. 
-def start(url):
+# Consumes the target URL and optionally, a dictionary containing extra data.
+def start(url, extras={}):
 
 	# Basic connectivity check to return immediately if no DNS record exists
 	domain = urlparse(url).netloc
@@ -183,8 +230,8 @@ def start(url):
 	# Identify which submodules to run against the input
 	relevant_optional_submodules = identify_optional_submodules(url)
 
-	# Create threadpool to aynchronously call submodules. 
-	pool = ThreadPool(processes=4)
+	# Create threadpool to asynchronously call submodules. 
+	pool = ThreadPool(processes=5)
 
 	async_call_spotter = pool.apply_async(call_spotter_spider, (url,))
 	async_call_downloader = pool.apply_async(call_downloader_spider, (url,))
@@ -194,15 +241,22 @@ def start(url):
 		async_call_ipfs = pool.apply_async(call_ipfs_module, (relevant_optional_submodules['IPFS'],))
 
 	basic_reconaissance = async_call_spotter.get()
+	async_call_cloudflare = None
+	if "cloudflareDeanonymiser" in relevant_optional_submodules.keys() and 'shodanApiKey' in extras.keys():
+		async_call_cloudflare = poool.apply_async(call_cloudflare_module, (url, extras['shodanApiKey'], basic_reconaissance,))
 	kit_downloader = async_call_downloader.get()
 	brute_downloader = async_call_brute.get()
 	ipfs_deanonymisation = None
 	if async_call_ipfs:
 		ipfs_deanonymisation = async_call_ipfs.get()
+	cloudflare_deanonymisation = None
+	if async_call_cloudflare:
+		cloudflare_deanonymisation = async_call_cloudflare.get()
 
 	cleanup('records')
 
 	formatted_return = []
+
 	if basic_reconaissance:
 		formatted_return.append(basic_reconaissance) 
 	if kit_downloader:
@@ -211,6 +265,14 @@ def start(url):
 		formatted_return.append(brute_downloader)
 	if ipfs_deanonymisation:
 		formatted_return.append(ipfs_deanonymisation)
+	if cloudflare_deanonymisation:
+		formatted_return.append(cloudflare_deanonymisation)
+
+	with open("./kits/DEBUH", 'w') as f:
+		f.write("IJOIOIJOIJOIJOI")
+		f.write("\n")
+		f.write(str(len(formatted_return)))
+
 
 	return formatted_return
 

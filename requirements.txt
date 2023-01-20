@@ -3,3 +3,4 @@ scrapy-splash==0.8.0
 scrapyscript==1.1.5
 Flask==2.2.2
 mmh3==3.0.0
+python-whois==0.8.0
