@@ -10,7 +10,7 @@ import requests
 from urllib.parse import urlparse 
 import socket
 import re
-import whois
+import dns.resolver
 from scrapyscript import Job, Processor 
 from multiprocessing.pool import ThreadPool
 import fishfactory_scrapy.spiders.spotter_spider
@@ -155,6 +155,7 @@ def call_ipfs_module(cids):
 	return ipfs_deanonymisation
 
 # Function to invoke the Cloudflare deanonymiser modue and return a dictionary of the response. 
+# Queries the Shodan API for favicon and ssl cert matches to IPs, and returns results if only a small number exist
 def call_cloudflare_module(url, shodan_key, basic_reconaissance):
 
 	if not basic_reconaissance:
@@ -163,9 +164,9 @@ def call_cloudflare_module(url, shodan_key, basic_reconaissance):
 	shodan = shodan_api_wrapper.ShodanApiWrapper(api_key=shodan_key)
 
 	favicons = []
-	favicons_data = basic_reconaissance['faviconData']
+	favicons_data = basic_reconaissance['recordData']['faviconData']
 	for item in favicons_data:
-		favicons.append("faviconHash")
+		favicons.append(item["faviconHash"])
 	
 	low_prevalence_favicons = []
 
@@ -173,21 +174,28 @@ def call_cloudflare_module(url, shodan_key, basic_reconaissance):
 		for favicon in favicons:
 			# Check whether favicon is low prevalence in Shodan observations
 			count = shodan.get_count('http.favicon.hash', favicon)
-			if count < 3:
+			if count < 6:
 				temp = {}
 				ips = shodan.get_hosts('http.favicon.hash', favicon)
-				temp['favicon'] = favicon
+				temp['faviconHash'] = favicon
 				temp['observedIPs'] = ips
+				low_prevalence_favicons.append(temp)
 
-	ssl_fingerprint = basic_reconaissance['sslFingerprint']
-	hosts = shodan.get_hosts('ssl.cert.fingerprint', ssl_fingerprint)
+	ssl_fingerprint = basic_reconaissance['recordData']['sslFingerprint']
+	hosts = []
+	if ssl_fingerprint:
+			count = shodan.get_count('ssl.cert.fingerprint', ssl_fingerprint)
+			if count < 6:
+				hosts = shodan.get_hosts('ssl.cert.fingerprint', ssl_fingerprint)
 
 	cloudflare_deanonymisation = {}
-	if low_prevalence_favicons or hosts:
+	if low_prevalence_favicons:
 		cloudflare_deanonymisation['module'] = 'cloudflare-deanonymisation'
 		cloudflare_deanonymisation['recordData'] = {}
-		cloudflare_deanonymisation['recordData']['faviconsObservedIPs'] = low_prevalence_favicons
-		cloudflare_deanonymisation['recordData']['sslCertObservedIPs'] = hosts
+		cloudflare_deanonymisation['recordData']['lowPrevalenceFavicons'] = low_prevalence_favicons
+	if hosts:
+		cloudflare_deanonymisation['module'] = 'cloudflare-deanonymisation'
+		cloudflare_deanonymisation['recordData']['lowPrevalenceSslCertBearers'] = hosts
 
 	return cloudflare_deanonymisation
 
@@ -204,11 +212,15 @@ def identify_optional_submodules(url):
 			optional_submodules['IPFS'] = cid
 
 	# Cloudflare deanonymiser submodule
+	cloudflare = False
 	domain = urlparse(url).netloc
-	ip = socket.gethostbyname(domain)
-	who = whois.whois(domain)
-	where = whois.whois(ip)
-	if "CLOUDFLARE" in [who.name, who.org, where.name, where.org]:
+	# Identify Cloudflare servers via nameserver to avoid full WHOIS
+	ns = dns.resolver.resolve(domain, 'NS')
+	for n in ns:
+		if 'cloudflare' in str(n):
+				cloudflare = True
+
+	if cloudflare:
 		optional_submodules['cloudflareDeanonymiser'] = 0
 
 	return optional_submodules
@@ -243,7 +255,7 @@ def start(url, extras={}):
 	basic_reconaissance = async_call_spotter.get()
 	async_call_cloudflare = None
 	if "cloudflareDeanonymiser" in relevant_optional_submodules.keys() and 'shodanApiKey' in extras.keys():
-		async_call_cloudflare = poool.apply_async(call_cloudflare_module, (url, extras['shodanApiKey'], basic_reconaissance,))
+		async_call_cloudflare = pool.apply_async(call_cloudflare_module, (url, extras['shodanApiKey'], basic_reconaissance,))
 	kit_downloader = async_call_downloader.get()
 	brute_downloader = async_call_brute.get()
 	ipfs_deanonymisation = None
@@ -267,11 +279,6 @@ def start(url, extras={}):
 		formatted_return.append(ipfs_deanonymisation)
 	if cloudflare_deanonymisation:
 		formatted_return.append(cloudflare_deanonymisation)
-
-	with open("./kits/DEBUH", 'w') as f:
-		f.write("IJOIOIJOIJOIJOI")
-		f.write("\n")
-		f.write(str(len(formatted_return)))
 
 
 	return formatted_return

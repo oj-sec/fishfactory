@@ -28,7 +28,7 @@ def submit_uri():
 	shodan_key = request.form.get('shodanApiKey')
 	if not shodan_key:
 		try:
-			shodan_key = request.get_json()['shodanApiKey']
+			shodan_key = request.get_json()['extras']['shodanApiKey']
 		except:
 			pass
 	if shodan_key:

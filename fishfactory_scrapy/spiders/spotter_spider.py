@@ -93,7 +93,7 @@ class SpotterSpider(scrapy.Spider):
                 headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"}
                 favicon_data = ""
                 try:
-                favicon_data = requests.get(href, headers=headers, timeout=3, verify=False)
+                    favicon_data = requests.get(href, headers=headers, timeout=3, verify=False)
                 except:
                     pass 
                 if favicon_data:
@@ -106,10 +106,10 @@ class SpotterSpider(scrapy.Spider):
                         temp['faviconHash'] = favicon_hash
                         favicon_hashes.append(temp)
         # Deduplicate favicon records
-        wactcher = []
+        watcher = []
         for i in range(len(favicon_hashes)):
             if favicon_hashes[i]['faviconHash'] not in watcher:
-                wactcher.append(favicon_hashes[i]['faviconHash'])
+                watcher.append(favicon_hashes[i]['faviconHash'])
             else:
                 del favicon_hashes[i]
 

@@ -43,6 +43,8 @@ h1 {
 <form action="submit_url" method='POST' onsubmit="let x = document.getElementById('splash'); x.style.display ='block';">
     <label form="url">Input URL:</label><br><br>
     <input type="text" id="url" name="url" size=30><br><br>
+    <label form="shodanApiKey">Optional - Shodan API Key:</label><br><br>
+    <input type="text" id="shodanApiKey" name="shodanApiKey" size=30><br><br>
     <input type="submit" value="Submit"><br><br>
 <div id="splash" style="display: none; z-index: 0;">
     <img src="/static/images/out.gif">
