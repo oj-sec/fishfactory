@@ -9,6 +9,8 @@ import requests
 from scrapy_splash import SplashRequest
 from scrapy.linkextractors import LinkExtractor
 from urllib.parse import urlparse, urljoin
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class SpotterSpider(scrapy.Spider):
 
@@ -90,10 +92,10 @@ class SpotterSpider(scrapy.Spider):
                 favicon_data = ''
                 headers = {'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"}
                 favicon_data = ""
-                #try:
+                try:
                 favicon_data = requests.get(href, headers=headers, timeout=3, verify=False)
-                #except:
-                #    pass 
+                except:
+                    pass 
                 if favicon_data:
                     response_type = favicon_data.headers['content-type']               
                     if favicon_data.content and "image" in response_type:
@@ -103,6 +105,13 @@ class SpotterSpider(scrapy.Spider):
                         temp['faviconURI'] = href
                         temp['faviconHash'] = favicon_hash
                         favicon_hashes.append(temp)
+        # Deduplicate favicon records
+        wactcher = []
+        for i in range(len(favicon_hashes)):
+            if favicon_hashes[i]['faviconHash'] not in watcher:
+                wactcher.append(favicon_hashes[i]['faviconHash'])
+            else:
+                del favicon_hashes[i]
 
 
         spotter_record = {}
