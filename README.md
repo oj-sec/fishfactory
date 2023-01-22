@@ -30,7 +30,12 @@ Use the ```fishfactory.py``` script to interact with the Fishfactory web service
 - Process a single URL using `python3 fishfactory.py -u "http://definitelynotmalicious.live"`
 - Read URLs from a newline delimited file using `python3 fishfactory.py -f inputfile.txt`
 
-Alternatively, submit a single URL at a time via the webUI.
+Optional flags are:
+
+- `-e`, `--elastic` send results to Elasticsearch (see below)
+- `-t [TLP]`, `--tlp [TLP]` add a [TLP 2.0 designation](https://www.cisa.gov/tlp) to the record(s) produced. Accepts values `RED`, `AMBER`, `AMBER+STRICT`, `GREEN` and `CLEAR`
+
+Alternatively, submit a single URL at a time via the webUI. No result forwardning is available for the webUI. 
 
 # Outputs
 

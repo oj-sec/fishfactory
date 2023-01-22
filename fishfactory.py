@@ -118,8 +118,8 @@ if __name__ == "__main__":
 	fishfactory = FishFactory(args.elastic)
 
 	if args.tlp:
-		if args.tlp.upper() not in ['RED', 'AMBER+STRICT', 'AMBER', 'GREEN', 'WHITE']:
-			print("Error - TLP designation only accepts values 'RED', 'AMBER+STRICT', 'AMBER', 'GREEN' and 'WHITE'.")
+		if args.tlp.upper() not in ['RED', 'AMBER+STRICT', 'AMBER', 'GREEN', 'CLEAR']:
+			print("Error - TLP designation only accepts values 'RED', 'AMBER+STRICT', 'AMBER', 'GREEN' and 'CLEAR'.")
 			quit()
 
 	if args.url:
