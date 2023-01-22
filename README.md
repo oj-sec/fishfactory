@@ -13,7 +13,7 @@ Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfac
 	- facilitates easy bulk inputs and transportation of documents to Elasticsearch
 - Additional, optional functions for special cases:
 	- for phishing infrastructure delivered via IPFS web gateways, uses [IPFSEnricher](https://github.com/oj-sec/IPFSEnricher) to identify the IP addresses pushing the phishing content content to the IPFS network as additional IOCs
-	- for phishing infrastructure behind Cloudflare, queries the Shodan API for hosts bearing the same favicon and/or SSL certificate, returning if there are five or less hosts bearing the identifier. Requires a Shodan API key. 
+	- for phishing infrastructure behind Cloudflare, queries the Shodan API for hosts bearing the same favicon and/or SSL certificate, returning if there are five or less hosts bearing the identifier. Requires a Shodan API key 
 
 # Installation
 
@@ -21,7 +21,9 @@ Fishfactory is intended to be deployed via the included docker-compose file.
 
 Pull the repository and run ```docker-compose up``` in the project directory. 
 
-The Fishfactory API will start listening on `localhost:5000`. The API's main endpoint,  `/fishfactory/submit_url`,  consumes a POSTed JSON dictionary and uses the value of key "url" as the target URL. A very simple webUI is also served at `/fishfactory`.
+The Fishfactory API will start listening on `localhost:5000`. The API's main endpoint,  `/fishfactory/submit_url`,  consumes a POSTed JSON dictionary and uses the value of key "url" as the target URL.
+
+A very simple webUI is also served at `/fishfactory`.
 
 # Usage
 
@@ -30,10 +32,10 @@ Use the ```fishfactory.py``` script to interact with the Fishfactory web service
 - Process a single URL using `python3 fishfactory.py -u "http://definitelynotmalicious.live"`
 - Read URLs from a newline delimited file using `python3 fishfactory.py -f inputfile.txt`
 
-Optional flags are:
+Optional parameters are:
 
+- `-t [TLP]`, `--tlp [TLP]` add a [TLP designation](https://www.cisa.gov/tlp) to the record(s) produced. Accepts TLP 2.0 values `RED`, `AMBER`, `AMBER+STRICT`, `GREEN` and `CLEAR`.
 - `-e`, `--elastic` send results to Elasticsearch (see below)
-- `-t [TLP]`, `--tlp [TLP]` add a [TLP 2.0 designation](https://www.cisa.gov/tlp) to the record(s) produced. Accepts values `RED`, `AMBER`, `AMBER+STRICT`, `GREEN` and `CLEAR`
 
 Alternatively, submit a single URL at a time via the webUI. No result forwardning is available for the webUI. 
 
