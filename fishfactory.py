@@ -64,19 +64,26 @@ class FishFactory:
 			return
 
 	# Function to send a request to Fishfactory.
-	def request_to_fishfactory(self, url):
+	def request_to_fishfactory(self, url, tlp):
 		config = self.get_attribute('config')
 		extras = {}
+		if tlp:
+			extras['tlp'] = tlp
+
 		if config:
 			fishfactory_location = config['fishfactoryApiLocation']
 			extras['shodanApiKey'] = config['shodanApiKey']
 		else:
 			fishfactory_location = "localhost:5000"
-
 		if not fishfactory_location.startswith('http'):
 			fishfactory_location = "http://" + fishfactory_location
 
-		response = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url, "extras":extras}, timeout=150)
+		try:
+			response = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url, "extras":extras}, timeout=150)
+		except:
+			print("Error contacting the Fishfactory API. Ensure the service is active and reachable.")
+			quit()
+
 		print(response.text)
 
 		elastic = self.get_attribute('elastic')
@@ -99,7 +106,8 @@ if __name__ == "__main__":
 	parser.add_argument('--config', '-c', action="store_true", default=False, required=False, help='Optional - generate config file via interactive prompt.')
 	parser.add_argument('--url', '-u', required=False, help='Optional - submit single URL to Fishfactory.')
 	parser.add_argument('--file', '-f', required=False, help='Optional - read URLs from a file and send to Fishfactory')
-	parser.add_argument('--elastic', '-e', action="store_true", default=False, required=False, help='Optional - send results to Elasticsearch using details from config file.')
+	parser.add_argument('--elastic', '-e', action="store_true", default=False, required=False, help='Optional - send records to Elasticsearch using details from config file.')
+	parser.add_argument('--tlp', '-t', required=False, help='Optional - TLP designation to apply to record(s). Accepts, RED, AMBER+STRICT, AMBER, GREEN, WHITE.')
 
 	args = parser.parse_args()
 
@@ -109,14 +117,19 @@ if __name__ == "__main__":
 
 	fishfactory = FishFactory(args.elastic)
 
+	if args.tlp:
+		if args.tlp.upper() not in ['RED', 'AMBER+STRICT', 'AMBER', 'GREEN', 'WHITE']:
+			print("Error - TLP designation only accepts values 'RED', 'AMBER+STRICT', 'AMBER', 'GREEN' and 'WHITE'.")
+			quit()
+
 	if args.url:
-		fishfactory.request_to_fishfactory(args.url)
+		fishfactory.request_to_fishfactory(args.url, args.tlp)
 
 	if args.file:
 		with open(args.file, 'r') as f:
 			urls = f.read().splitlines()
 			for url in urls:
-				fishfactory.request_to_fishfactory(url)
+				fishfactory.request_to_fishfactory(url, args.tlp)
 
 
 

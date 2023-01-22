@@ -20,10 +20,12 @@ def submit_uri():
 	formatted_return['meta']['endpoint'] = 'fishfactory/submit_uri'
 	formatted_return['meta']['requestTime'] = str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat())
 
+	# Parse URL from request
 	url = request.form.get('url')
 	if not url:
 		url = request.get_json()['url']
 
+	# Shodan API key
 	extras = {}
 	shodan_key = request.form.get('shodanApiKey')
 	if not shodan_key:
@@ -34,6 +36,14 @@ def submit_uri():
 	if shodan_key:
 		extras['shodanApiKey'] = shodan_key
 
+	# Record TLP
+	formatted_return['meta']['TLP'] = ""
+	try:
+		if 'tlp' in request.get_json()['extras']:
+			formatted_return['meta']['TLP'] = request.get_json()['extras']['tlp']
+	except:
+		pass
+
 	formatted_return['meta']['query'] = url
 	records = foreman.start(url, extras)
 
@@ -42,14 +52,6 @@ def submit_uri():
 	else:
 		formatted_return['records'] = records
 		formatted_return['meta']['responseType'] = 'success'
-
-#	try:
-#		formatted_return['meta']['responseType'] = 'success'
-#		url = request.get_json()['url']
-#		formatted_return['meta']['query'] = url
-#		formatted_return['records'] = foreman.start(url)
-#	except:
-#		formatted_return['meta']['responseType'] = 'error'
 
 	return formatted_return
 
