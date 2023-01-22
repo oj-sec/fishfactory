@@ -23,7 +23,7 @@ Pull the repository and run ```docker-compose up``` in the project directory.
 
 The Fishfactory API will start listening on `localhost:5000`. The API's main endpoint,  `/fishfactory/submit_url`,  consumes a POSTed JSON dictionary and uses the value of key "url" as the target URL.
 
-A very simple webUI is also served at `/fishfactory`.
+A rudimentary webUI is also served at `/fishfactory`.
 
 # Usage
 
@@ -34,7 +34,7 @@ Use the ```fishfactory.py``` script to interact with the Fishfactory web service
 
 Optional parameters are:
 
-- `-t [TLP]`, `--tlp [TLP]` add a [TLP designation](https://www.cisa.gov/tlp) to the record(s) produced. Accepts TLP 2.0 values `RED`, `AMBER`, `AMBER+STRICT`, `GREEN` and `CLEAR`.
+- `-t [TLP]`, `--tlp [TLP]` add a [TLP designation](https://www.cisa.gov/tlp) to the record(s) produced. Accepts TLP 2.0 values `RED`, `AMBER+STRICT`, `AMBER`, `GREEN` and `CLEAR`.
 - `-e`, `--elastic` send results to Elasticsearch (see below)
 
 Alternatively, submit a single URL at a time via the webUI. No result forwardning is available for the webUI. 
