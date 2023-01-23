@@ -14,7 +14,7 @@ import requests
 import hashlib
 import time
 
-# Function to consume file contents and parse out emails and references to text files. 
+# Function to consume file contents and parse out emails and references to text files from the contents of a file read into memory. 
 def parse_kit_file(file_contents):
 	result = {}
 
@@ -39,6 +39,7 @@ def parse_kit_file(file_contents):
 
 	return(result)
 
+# Function to list all files in the current directory. 
 def get_all_zips():
 	files = os.listdir()
 	return files
@@ -59,10 +60,10 @@ def get_zip_contents(zip_file):
 	except:
 		return None
 
-# Function to consume a filename inside a zip and execute the parser function on any php files.
+# Function to consume a filename inside a zip and execute the parser function on any PHP files.
 def iterate_contents(zip_content):
 	result = {}
-	if zip_content.endswith('php'):
+	if zip_content.lower.endswith('php'):
 		try:
 			with open(zip_content, 'r') as f:
 				try:
@@ -80,6 +81,7 @@ def iterate_contents(zip_content):
 	if result:
 		return result
 
+# Function to process the directory structure from a passed list of files.
 def process_file_structure(zip_contents):
 	file_structure = []
 
@@ -110,6 +112,7 @@ def process_file_structure(zip_contents):
 	file_structure = [e.replace('./kits/temp/', '') for e in file_structure]
 	return file_structure
 
+# Function to download text files and return a list of parser results. 
 def pull_text_files(bulk_result):
 
 	url = bulk_result['kitUrl']
@@ -143,13 +146,14 @@ def pull_text_files(bulk_result):
 
 	return downloaded_files
 
+# Function to parse emails from text files. 
 def parse_text_file(text):
 
 	emails = re.findall("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}", text)
 	emails = list(dict.fromkeys(emails))
 	return emails
 
-
+# Function to construct a list of likely locations of credential stores based on the input URL and parsed file structure.
 def build_url_list(url, file_structure):
 
 	url_list = []
@@ -179,7 +183,7 @@ def build_url_list(url, file_structure):
 	url_list = list(dict.fromkeys(url_list))
 	return url_list
 
-
+# Main execution handler - target iterator and return constructor. 
 def cycle_targets(targets):
 	for target in targets:
 		zip_file = "./kits/" + target['kitHash'] + '.zip'
@@ -223,6 +227,7 @@ def cycle_targets(targets):
 			if bulk_result: 
 				return(bulk_result)				
 
+# Entry point. 
 def start(processor_targets):
 
 	results = []
