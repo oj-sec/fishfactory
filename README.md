@@ -1,11 +1,11 @@
 # Fishfactory
 
-Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfactory is intended to automate the low hanging fruit intelligence pivots for credential phishing infrastructure ([T1566.002](https://attack.mitre.org/techniques/T1566/002/) + [T1078](https://attack.mitre.org/techniques/T1078/)) to give users insight into the mechanics and scope of phishing attacks impacting them.  
+Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfactory is intended to automate the low hanging fruit intelligence pivots for credential phishing infrastructure ([T1566.002](https://attack.mitre.org/techniques/T1566/002/) + [T1078](https://attack.mitre.org/techniques/T1078/)) to give users insight into the mechanics and scope of phishing attacks impacting them. 
 
 # Features
 
 - Standard functions:
-	- conducts post-javascript execution reconnaissance of lure pages to obtain a screenshot and basic details such as SSL certificate and favicon
+	- conducts post-JavaScript execution reconnaissance of lure pages to obtain a screenshot and basic details such as SSL certificate and favicon
 	- walks back phishing URLs to find open directories and ZIP phishing kits
 		- processes files in kits to identify PHP mailers, direct writes to credential stores and Telegram bots
 			- downloads any credential stores found & processes victim emails
@@ -13,7 +13,7 @@ Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfac
 	- facilitates easy bulk inputs and transportation of documents to Elasticsearch
 - Additional, optional functions for special cases:
 	- for phishing infrastructure delivered via IPFS web gateways, uses [IPFSEnricher](https://github.com/oj-sec/IPFSEnricher) to identify the IP addresses pushing the phishing content content to the IPFS network as additional IOCs
-	- for phishing infrastructure behind Cloudflare, queries the Shodan API for hosts bearing the same favicon and/or SSL certificate, returning if there are five or less hosts bearing the identifier. Requires a Shodan API key 
+	- for phishing infrastructure behind Cloudflare, attempts to obtain candidates for the true IP address by querying the Shodan API for hosts bearing the same favicon and/or SSL certificate. Returns results if there are five or less hosts bearing the identifier. Requires a Shodan API key 
 
 # Installation
 
@@ -49,6 +49,8 @@ Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `.
 
 # Planned features
 
-- enrich details obtained from Telegram bots
+- sample Kibana dashboard
+- improving Cloudflare deanonymisation techniques
+- enriching details obtained from Telegram bots via the Telegram API
 - attempting to identify adversary-in-the-middle and related, sophisticated phishing techniques
 - machine learning image classification on lure screenshots
