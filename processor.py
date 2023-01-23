@@ -18,24 +18,30 @@ import time
 def parse_kit_file(file_contents):
 	result = {}
 
-	emails = re.findall("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}", file_contents)
+	# Search for emails
+	emails = re.findall("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", file_contents)
 	if len(emails) > 0:
 
-		email_domains = []
-
-		for email in emails:
-			chunks = email.split("@")
-			email_domains.append(chunks[1])
+		email_domains = [] 
 
 		emails = list(dict.fromkeys(emails))
-		email_domains = list(dict.fromkeys(email_domains))
 		result["kitContainedEmails"] = emails
 
+	# Search for references to text files
 	txt_files = re.findall("(\w*?)\.txt", file_contents)
 	if len(txt_files) > 0:
 		txt_files = [name + ".txt" for name in txt_files]
 		txt_files = list(dict.fromkeys(txt_files))
 		result['kitReferencedTextFiles'] = txt_files
+
+	# Search for references to telegram bot processors 
+	telegram_bot_tokens = re.findall("[0-9]{8,10}:[a-zA-Z0-9_-]{35}", file_contents)
+	if len(telegram_bot_tokens) > 0:
+		telegram_chat_ids = re.findall("[0-9]{9,12}", file_contents)
+		result["telegramBotTokens"] = list(dict.fromkeys(telegram_bot_tokens))
+		if telegram_chat_ids:
+			telegram_chat_ids = list(dict.fromkeys(telegram_chat_ids))
+		result["possibleTelegramChatIds"] = telegram_chat_ids
 
 	return(result)
 
@@ -63,7 +69,7 @@ def get_zip_contents(zip_file):
 # Function to consume a filename inside a zip and execute the parser function on any PHP files.
 def iterate_contents(zip_content):
 	result = {}
-	if zip_content.lower.endswith('php'):
+	if zip_content.endswith('php') or zip_content.endswith('PHP'):
 		try:
 			with open(zip_content, 'r') as f:
 				try:
@@ -193,6 +199,8 @@ def cycle_targets(targets):
 			bulk_result = {}
 			emails = []
 			text_files = []
+			telegram_bots = []
+			telegram_chats = []
 			for zip_content in zip_contents:
 				try:
 					result = iterate_contents(zip_content)
@@ -213,6 +221,15 @@ def cycle_targets(targets):
 						bulk_result['kitReferencedTextFiles'] = text_files
 					except Exception as e:
 						pass
+					try: 
+						contained_telegram_bots = result_inner['telegramBotTokens']
+						contained_telegram_chats = result_inner['possibleTelegramChatIds']
+						for bot in contained_telegram_bots:
+							telegram_bots.append(bot)
+						for chat in contained_telegram_chats:
+							telegram_chats.append(chat)
+					except Exception as e:
+						pass
 				except:
 					pass
 			bulk_result['kitUrl'] = target['kitUrl']
@@ -224,6 +241,9 @@ def cycle_targets(targets):
 				bulk_result['credstores'] = pull_text_files(bulk_result)
 			else:
 				bulk_result['credstores'] = []
+			if len(telegram_bots) > 0:
+				bulk_result['telegramBotTokens'] = telegram_bots
+				bulk_result['possibleTelegramChatIds'] = telegram_chats
 			if bulk_result: 
 				return(bulk_result)				
 
