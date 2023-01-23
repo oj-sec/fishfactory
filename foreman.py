@@ -214,11 +214,14 @@ def identify_optional_submodules(url):
 	# Cloudflare deanonymiser submodule
 	cloudflare = False
 	domain = urlparse(url).netloc
-	# Identify Cloudflare servers via nameserver to avoid full WHOIS
-	ns = dns.resolver.resolve(domain, 'NS')
-	for n in ns:
-		if 'cloudflare' in str(n):
-				cloudflare = True
+	# Attempt to identify Cloudflare servers via nameserver to avoid full WHOIS
+	try:
+		ns = dns.resolver.resolve(domain, 'NS')
+		for n in ns:
+			if 'cloudflare' in str(n):
+					cloudflare = True
+	except:
+		pass
 
 	if cloudflare:
 		optional_submodules['cloudflareDeanonymiser'] = 0

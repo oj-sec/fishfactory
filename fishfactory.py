@@ -107,7 +107,7 @@ if __name__ == "__main__":
 	parser.add_argument('--url', '-u', required=False, help='Optional - submit single URL to Fishfactory.')
 	parser.add_argument('--file', '-f', required=False, help='Optional - read URLs from a file and send to Fishfactory')
 	parser.add_argument('--elastic', '-e', action="store_true", default=False, required=False, help='Optional - send records to Elasticsearch using details from config file.')
-	parser.add_argument('--tlp', '-t', required=False, help='Optional - TLP designation to apply to record(s). Accepts, RED, AMBER+STRICT, AMBER, GREEN, WHITE.')
+	parser.add_argument('--tlp', '-t', required=False, help='Optional - TLP designation to apply to record(s). Accepts RED, AMBER+STRICT, AMBER, GREEN, CLEAR.')
 
 	args = parser.parse_args()
 
