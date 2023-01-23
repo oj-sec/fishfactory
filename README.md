@@ -5,11 +5,11 @@ Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfac
 # Features
 
 - Standard functions:
-	- conducts basic reconnaissance of lure pages
+	- conducts post-javascript execution reconnaissance of lure pages to obtain a screenshot and basic details such as SSL certificate and favicon
 	- walks back phishing URLs to find open directories and ZIP phishing kits
-	- processes PHP files in kits to extract intelligence and identify references to phishing credential stores
-	- runs a naive credential store finder against targets to look for common credential stores locations
-	- processes emails from any credential stores located
+		- processes files in kits to identify PHP mailers, direct writes to credential stores and Telegram bots
+			- downloads any credential stores found & processes victim emails
+	- runs a naive credential store finder against targets to look for common credential stores locations & processes victim emails from any credential stores found
 	- facilitates easy bulk inputs and transportation of documents to Elasticsearch
 - Additional, optional functions for special cases:
 	- for phishing infrastructure delivered via IPFS web gateways, uses [IPFSEnricher](https://github.com/oj-sec/IPFSEnricher) to identify the IP addresses pushing the phishing content content to the IPFS network as additional IOCs
@@ -17,7 +17,7 @@ Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfac
 
 # Installation
 
-Fishfactory is intended to be deployed via the included docker-compose file. 
+Fishfactory is intended to be deployed via the included docker-compose file & prebuilt containers.  
 
 Pull the repository and run ```docker-compose up``` in the project directory. 
 
@@ -37,7 +37,7 @@ Optional parameters are:
 - `-t [TLP]`, `--tlp [TLP]` add a [TLP designation](https://www.cisa.gov/tlp) to the record(s) produced. Accepts TLP 2.0 values `RED`, `AMBER+STRICT`, `AMBER`, `GREEN` and `CLEAR`.
 - `-e`, `--elastic` send results to Elasticsearch (see below)
 
-Alternatively, submit a single URL at a time via the webUI. No result forwardning is available for the webUI. 
+Alternatively, submit a single URL at a time via the webUI. No result forwarding is available for the webUI. 
 
 # Outputs
 
@@ -49,6 +49,6 @@ Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `.
 
 # Planned features
 
-- parsing references to Telegram bots from phishing kits
-- identifying aversary-in-the-middle and related, sophisticated phishing techniques
+- enrich details obtained from Telegram bots
+- attempting to identify adversary-in-the-middle and related, sophisticated phishing techniques
 - machine learning image classification on lure screenshots
