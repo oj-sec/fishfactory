@@ -69,7 +69,7 @@ class SpotterSpider(scrapy.Spider):
         favicon_hashes = []
         hrefs = []
         # Handle favicon referenced by rel tag case
-        rel_tag = response.xpath('//*[@rel="icon" or @rel="sortcut icon"]/@href').get()
+        rel_tag = response.xpath('//*[@rel="icon" or @rel="shortcut icon"]/@href').get()
         if rel_tag:
             hrefs.append(rel_tag)
         # Handle favicon.ico in web root case
