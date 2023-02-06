@@ -43,7 +43,7 @@ Alternatively, submit a single URL at a time via the webUI. No result forwarding
 
 `fishfactory.py` will output results to stdout by default, but will optionally also forward results to your Elasticsearch instance if the `-e` flag is passed.
 
-If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance (including index endpoint) URI. The configuration file can also be used to specify a custom API location and provide your Shodan API key. Both features are included in the interactive prompt.
+If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance (including index endpoint) URI. The configuration file can also be used to specify a custom location for the Fishfactory API and provide your Shodan API key. Both features are included in the interactive prompt.
 
 Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `./images` directories on the host via shared volumes. Note that these files will be owned by root as per normal docker behavior.  
 

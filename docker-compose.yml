@@ -24,4 +24,7 @@ services:
 
     ipfs_enricher:
         image: 0jsec/ipfs_enricher:latest
+
+    false_gate:
+        image: 0jsec/false_gate:latest
     

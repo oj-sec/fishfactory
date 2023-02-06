@@ -199,6 +199,24 @@ def call_cloudflare_module(url, shodan_key, basic_reconaissance):
 
 	return cloudflare_deanonymisation
 
+# Function to invoke the false_gate submodule and return a dictionary of the results.
+def call_false_gate(url):
+
+	false_gate = {}
+	results = ""
+
+	try:
+		response = requests.post('http://false_gate:5000/false_gate/submit_url/', json={"url":url}, timeout=45)
+		results = json.loads(response.text)
+	except:
+		pass
+
+	if results:
+		false_gate['module'] = 'false-gate'
+		false_gate['recordData'] = results
+
+	return false_gate
+
 # Function to identify which optional submodules should be run against the target
 def identify_optional_submodules(url):
 
@@ -246,11 +264,12 @@ def start(url, extras={}):
 	relevant_optional_submodules = identify_optional_submodules(url)
 
 	# Create threadpool to asynchronously call submodules. 
-	pool = ThreadPool(processes=5)
+	pool = ThreadPool(processes=6)
 
 	async_call_spotter = pool.apply_async(call_spotter_spider, (url,))
 	async_call_downloader = pool.apply_async(call_downloader_spider, (url,))
 	async_call_brute = pool.apply_async(call_brute_spider, (url,)) 
+	async_call_false_gate = pool.apply_async(call_false_gate, (url,))
 	async_call_ipfs = None
 	if "IPFS" in relevant_optional_submodules.keys():
 		async_call_ipfs = pool.apply_async(call_ipfs_module, (relevant_optional_submodules['IPFS'],))
@@ -261,6 +280,7 @@ def start(url, extras={}):
 		async_call_cloudflare = pool.apply_async(call_cloudflare_module, (url, extras['shodanApiKey'], basic_reconaissance,))
 	kit_downloader = async_call_downloader.get()
 	brute_downloader = async_call_brute.get()
+	false_gate = async_call_false_gate.get()
 	ipfs_deanonymisation = None
 	if async_call_ipfs:
 		ipfs_deanonymisation = async_call_ipfs.get()
@@ -282,7 +302,8 @@ def start(url, extras={}):
 		formatted_return.append(ipfs_deanonymisation)
 	if cloudflare_deanonymisation:
 		formatted_return.append(cloudflare_deanonymisation)
-
+	if false_gate:
+		formatted_return.append(false_gate)
 
 	return formatted_return
 
