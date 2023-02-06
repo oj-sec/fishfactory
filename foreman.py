@@ -213,6 +213,7 @@ def call_false_gate(url):
 
 	if results:
 		false_gate['module'] = 'false-gate'
+		del results['targetUrl']
 		false_gate['recordData'] = results
 
 	return false_gate
