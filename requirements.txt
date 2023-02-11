@@ -4,3 +4,4 @@ scrapyscript==1.1.5
 Flask==2.2.2
 mmh3==3.0.0
 dnspython==2.3.0
+elasticsearch==8.6.1

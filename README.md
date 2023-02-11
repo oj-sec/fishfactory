@@ -2,7 +2,7 @@
 
 # Fishfactory
 
-Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfactory is intended to automate the low hanging fruit intelligence pivots for credential phishing infrastructure ([T1566.002](https://attack.mitre.org/techniques/T1566/002/) + [T1078](https://attack.mitre.org/techniques/T1078/)) to give users insight into the mechanics and scope of phishing attacks impacting them. 
+Fishfactory is a utility for extracting intelligence from phishing URLs. Fishfactory is intended to automate all of the 'low hanging fruit' intelligence pivots for credential phishing infrastructure ([T1566.002](https://attack.mitre.org/techniques/T1566/002/) + [T1078](https://attack.mitre.org/techniques/T1078/)) to give users insight into the mechanics and scope of phishing attacks impacting them. 
 
 Fishfactory is currently in a functional prototype stage. 
 

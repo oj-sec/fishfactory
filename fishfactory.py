@@ -100,7 +100,7 @@ class FishFactory:
 		config = self.get_attribute('config')
 
 		if document['meta']['responseType'] == 'success':
-			r = requests.post(config['elasticUrl'], headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
+			r = requests.post(config['elasticUrl'].rstrip("/") +'/_doc', headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
 			print(r.text)
 
 if __name__ == "__main__":
