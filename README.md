@@ -49,7 +49,15 @@ Alternatively, submit a single URL at a time via the webUI. No result forwarding
 
 If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance (including index endpoint) URI. The configuration file can also be used to specify a custom location for the Fishfactory API and provide your Shodan API key. Both features are included in the interactive prompt.
 
-Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `./images` directories on the host via shared volumes. Note that these files will be owned by root as per normal docker behavior.  
+Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `./images` directories on the host via shared volumes. Note that these files will be owned by root as per normal docker behavior. 
+
+# Alerting 
+
+The `alerter.py` script can be used to emit alerts to a webhook receiver. Emitting alerts works by  querying your Elastic index for victim email addresses matching a query (e.g. a domain or TLD of interest) on a specified periodic cadence. Alerting requires that you are logging records to Elasticsearch via a validly configured `config.ini` file. 
+
+The `alerter.py` script should be set to run via a cron job or similar scheduled execution. The config file generation flag (`-c`) can be used to prepare a configuration file for alerting. Current alerting options are:
+
+- Microsoft Teams webhook alert via adaptive card (`"alertTargetType": "ms-teams-webhook"`)
 
 # Planned features
 

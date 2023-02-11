@@ -81,13 +81,12 @@ class FishFactory:
 		try:
 			response = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url, "extras":extras}, timeout=150)
 			print(response.text)
-
 			response = json.loads(response.text)
-
-			if response['records']:
-				elastic = self.get_attribute('elastic')
-				if elastic:
-					self.send_to_elastic(response)
+			if "records" in response.keys():
+				if response['records']:
+					elastic = self.get_attribute('elastic')
+					if elastic:
+						self.send_to_elastic(response)
 				
 		except Exception as e:
 			print("Error contacting the Fishfactory API. Ensure the service is active and reachable.")

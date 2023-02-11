@@ -136,11 +136,11 @@ def call_ipfs_module(cids):
 
 	for cid in cids:
 		try:
-			response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip(), timeout=45)
+			response = requests.get('http://ipfs_enricher:5000/cid_to_provider_ip/' + cid.strip(), timeout=150)
 			response = json.loads(response.text)
 			if response['meta']['resultType'] == 'success':
 				for result in response['results']:
-					if 'IPaddresses' in result.keys():
+					if 'IPAddresses' in result.keys():
 						results.append(result)
 		except requests.exceptions.Timeout:
 			pass
@@ -334,7 +334,7 @@ def parse_cid_from_url(url):
 	for chunk in url_chunks:
 		if chunk.startswith("Qm") and len(chunk) == 46:
 			cids.append(chunk)
-		elif chunk.startswith("bafy") and len(chunk) > 55:
+		elif chunk.startswith("baf") and len(chunk) > 55:
 			cids.append(chunk)
 
 	cids = list(dict.fromkeys(cids))

@@ -2,7 +2,7 @@
 
 # Function to emit alerts to webhhoks based on victims found by fishfactory. 
 
-# alerter.py is intended to be executed via a cron job or similar periodic execution & requires that Fishfactory is recording events to Elasticsearch.
+# alerter.py is intended to be executed via a cron job or similar periodic execution & requires that Fishfactory is recording events to Elasticsearch via a validly configured config file.
 
 import requests
 import json
@@ -198,11 +198,11 @@ class Alerter:
 						                            "value": email
 						                        },
 						                        {
-						                            "title": "Phishing site",
+						                            "title": "Phishing URL",
 						                            "value": event['meta']['query']
 						                        },
 						                        {
-						                            "title": "Credential store(s)",
+						                            "title": "Credential store URL(s)     ",
 						                            "value": str(credstores)
 						                        },
 						                        {
