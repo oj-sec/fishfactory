@@ -80,21 +80,24 @@ class FishFactory:
 
 		try:
 			response = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url, "extras":extras}, timeout=150)
-		except:
+			print(response.text)
+
+			response = json.loads(response.text)
+
+			if response['records']:
+				elastic = self.get_attribute('elastic')
+				if elastic:
+					self.send_to_elastic(response)
+				
+		except Exception as e:
 			print("Error contacting the Fishfactory API. Ensure the service is active and reachable.")
-			quit()
-
-		print(response.text)
-
-		elastic = self.get_attribute('elastic')
-		if elastic:
-			self.send_to_elastic(response)
+			print("Exception ocurred for url: " + url)
+			print("Exception encountered: " + str(e))
+			#quit()
 
 	# Function to send result documents to Elasticsearch.
 	def send_to_elastic(self, document):
 		config = self.get_attribute('config')
-
-		document = json.loads(document.text)
 
 		if document['meta']['responseType'] == 'success':
 			r = requests.post(config['elasticUrl'], headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
