@@ -59,6 +59,8 @@ The `alerter.py` script should be set to run via a cron job or similar scheduled
 
 - Microsoft Teams webhook alert via adaptive card (`"alertTargetType": "ms-teams-webhook"`)
 
+Note that the functionality of `alerter.py` can be wholly replaced with Elastic's premium altering features if you have them available to you. 
+
 # Planned features
 
 - sample Kibana dashboard
