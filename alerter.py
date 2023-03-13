@@ -236,6 +236,7 @@ class Alerter:
 						    ]  
 						}
 
+						print(adaptive_card)
 						response = requests.post(alert['alertTarget'],headers={'Content-Type': 'application/json'}, data=json.dumps(adaptive_card), verify=False)
 						print(response.text)
 						time.sleep(1)

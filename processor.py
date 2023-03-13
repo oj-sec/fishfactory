@@ -2,6 +2,8 @@
 
 # Processor function to process downloaded kits and identify, download and process credstores.
 
+# Note that this submodule contains legacy code defining functionality that has since been moved to an equivalent Rust implementation. 
+
 from zipfile import ZipFile
 import os
 import shutil
@@ -13,6 +15,7 @@ from urllib.parse import urlparse
 import requests
 import hashlib
 import time
+import subprocess
 
 # Function to consume file contents and parse out emails and references to text files from the contents of a file read into memory. 
 def parse_kit_file(file_contents):
@@ -191,6 +194,55 @@ def build_url_list(url, file_structure):
 
 # Main execution handler - target iterator and return constructor. 
 def cycle_targets(targets):
+	for target in targets:
+		zip_file = "./kits/" + target['kitHash'] + '.zip'
+		zip_features = subprocess.run(["./processor", "--path", zip_file], capture_output=True, text=True)
+
+		if zip_features:
+			serialised_zip_features = []
+			for feature in zip_features.stdout.splitlines():
+				serialised_zip_features.append(json.loads(feature.strip()))
+
+			zip_contents = []
+			emails = []
+			text_files = []
+			telegram_bots = []
+			telegram_chats = []
+
+			for feature in serialised_zip_features:
+				zip_contents.append(feature['filename'])
+				emails.extend(feature['emailAddresses'])
+				text_files.extend(feature['textFiles'])
+				telegram_bots.extend(feature['telegramTokens'])
+				telegram_chats.extend(feature['telegramChatIds'])
+
+			zip_contents = list(dict.fromkeys(zip_contents))
+			emails = list(dict.fromkeys(emails))
+			text_files = list(dict.fromkeys(text_files))
+			telegram_bots = list(dict.fromkeys(telegram_bots))
+			telegram_chats = list(dict.fromkeys(telegram_chats))
+
+			kit_file_structure = process_file_structure(zip_contents)
+
+			bulk_result = {}
+
+			bulk_result['kitUrl'] = target['kitUrl']
+			bulk_result['recordType'] = 'kitProcessor'
+			bulk_result['kitContainedEmails'] = emails
+			bulk_result['kitReferencedFileStructure'] = process_file_structure(zip_contents)
+			bulk_result['kitReferencedTextFiles'] = text_files
+			if len(text_files) > 0:
+				bulk_result['credstores'] = pull_text_files(bulk_result)
+			else:
+				bulk_result['credstores'] = []
+			if len(telegram_bots) > 0:
+				bulk_result['telegramBotTokens'] = telegram_bots
+				bulk_result['possibleTelegramChatIds'] = telegram_chats
+			if bulk_result: 
+				return(bulk_result)	
+
+# Legacy execution handler - target iterator and return constructor. 
+def legacy_cycle_targets(targets):
 	for target in targets:
 		zip_file = "./kits/" + target['kitHash'] + '.zip'
 		zip_contents = get_zip_contents(zip_file)
