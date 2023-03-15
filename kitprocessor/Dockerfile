@@ -1,3 +1,4 @@
+# Note that this exists purely to facilitate building the kitprocessor (processor) binary with a GLIBC version compatible with the parent images
 # docker image build -t 0jsec/kitprocessor_containerized_build
 
 # base image

@@ -85,13 +85,6 @@ fn extract_zip_file(zip_name:std::path::PathBuf) -> Vec<PathBuf> {
             None => continue,
         };
 
-        {
-            let comment = file.comment();
-            if !comment.is_empty() {
-                println!("File {} comment: {}", i, comment);
-            }
-        }
-
         let outpath_clone = outpath.clone();
 
         if (*file.name()).ends_with('/') {
