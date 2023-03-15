@@ -38,12 +38,12 @@ class DownloaderSpider(scrapy.Spider):
             remaining = url.split('/')
 
             targets.append(url.rstrip("/") + "/")
-            targets.append(url + ".zip")
 
             # Exit loop when there are no more url endpoints or if there are more than 15, to reduce the impact of timeout bombing. 
             if len(remaining) == 1 or len(remaining) > 15:
                 break
-
+                
+            targets.append(url + ".zip")
             if url.endswith("php"):
                 temp = url.rstrip("php")
                 temp = temp + "zip"
