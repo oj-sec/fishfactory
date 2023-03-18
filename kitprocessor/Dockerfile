@@ -1,5 +1,7 @@
 # Note that this exists purely to facilitate building the kitprocessor (processor) binary with a GLIBC version compatible with the parent images
 # docker image build -t 0jsec/kitprocessor_containerized_build
+# docker run 0jsec/kitprocessor_containerized_build:latest sleep infinity
+# docker cp {container_id}:/app/target/release/kitprocessor .
 
 # base image
 FROM rust:1.68-bullseye
