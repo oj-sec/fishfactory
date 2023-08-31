@@ -1,7 +1,7 @@
 version: '3.9'
 services:
     fishfactory:
-        image: 0jsec/fishfactory:latest
+        image: fishfactory:latest
         ports:
             - "5000:5000"
         # Unmap these volumes to prevent storage of files on the host filesystem.
@@ -9,22 +9,3 @@ services:
             - ./kits:/app/kits
             - ./images:/app/images
             - ./credstores:/app/credstores
-            
-    splash:
-        image: scrapinghub/splash:3.0
-        command: --max-timeout 3600 --slots 5 --maxrss 3000 --verbosity 1
-        expose:
-            - 8050
-        mem_limit: 4200m
-        memswap_limit: 5400m
-        restart: always
-        volumes:
-            - ./proxy-profiles:/etc/splash/proxy-profiles:ro
-            - ./filters:/etc/splash/filters:ro
-
-    ipfs_enricher:
-        image: 0jsec/ipfs_enricher:latest
-
-    false_gate:
-        image: 0jsec/false_gate:latest
-    

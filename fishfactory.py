@@ -1,137 +1,147 @@
-#!/usr/bin/env python3
+# Main controller class for Fishfactory
 
-# Script to automate interactions with Fishfactory and result handling via Elasticsearch. 
-
-# Reads target and authorisation from the config.ini file, which can be manually populated or populated through the -c option. 
-
-import argparse
-import requests
 import json
-import warnings
-import os
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+from urllib.parse import urlparse 
+import socket
+import re
+from multiprocessing.pool import ThreadPool
+import datetime
+import time
 
-# Function to generate config via interactive prompt. 
-def gen_config():
-	config = {}
-	config['elasticUrl'] = input('Enter URL of target Elasticsearch instance and index:')
-	config['elasticApiKey'] = input('Enter API key for Elasticsearch instance:')
-	option = ""
-	while True:	
-		option = input("Do you wish to specify a custom Fishfactory API location? (default=localhost:5000) [Y/N]")
-		if option.lower() == 'y' or option.lower() == 'n':
-			break
-	if option.lower() == 'y':
-		config['fishfactoryAPILocation'] = input('Enter custom Fishfactory API location:')
-	else:
-		config['fishfactoryAPILocation'] = "localhost:5000"
-	while True:
-		option = input("Do you wish to endter a Shodan API key for extra enrichment? [Y/N]")
-		if option.lower() == 'y' or option.lower() == 'n':
-			break
-	if option.lower() == 'y':
-		config['shodanApiKey'] = input('Enter Shodan API key:')
-	else:
-		config['shodanApiKey'] = ""		
+import routines.reconaissance
+import routines.downloader
+import routines.brute
+ 
+class Fishfactory:
 
-	with open('config.ini', 'w') as c:
-		json.dump(config, c)
+    def __init__(self, target, tlp=None, source=None, requestor=None):
+        with open("config.json","r") as f:
+            config = json.loads(f.read())
+        self.__target = target
+        self.__ipfs_domains = config['ipfs_domains']
+        self.__domain = urlparse(target).netloc
+        self.__submodules = {}
+        self.__version = config['fishfactoryVersion']
+        self.__tlp = tlp
+        self.__source = source
+        self.__requestor = requestor
 
-# Function to read config.ini file.
-def read_config():
-	try:
-		with open('config.ini', 'r') as c:
-			config = json.loads(c.read())
-			return config
-	except FileNotFoundError:
-		return
+    def identify_relevant_submodules(self):
 
-class FishFactory:
+        relevant_submodules = {}
 
-	# Initialisation method.
-	def __init__(self, elastic):
-		# Read config file
-		self.elastic = elastic
-		self.config = read_config()
+        for domain in self.__ipfs_domains:
+            if domain in self.__target:
+                cid = self.parse_cid_from_url(self.__target)
+                relevant_submodules['ipfs'] = cid
+        
+        self.__relevant_submodules = relevant_submodules
+    
+    def parse_cid_from_url(self, url):
+        
+        cids = []
 
-	# Getter method for value of class attributes
-	def get_attribute(self, attribute):
-		attributes = self.__dict__
-		try:
-			return attributes[attribute]
-		except:
-			return
+        url_chunks = re.split("/|\.", url)
+        for chunk in url_chunks:
+            if chunk.startswith("Qm") and len(chunk) == 46:
+                cids.append(chunk)
+            elif chunk.startswith("baf") and len(chunk) > 55:
+                cids.append(chunk)
+        
+        cids = list(dict.fromkeys(cids))
+        return cids
+    
+    def check_alive(self):
+        try:
+            ip = socket.gethostbyname(self.__domain)
+            if ip:
+                return True
+            else:
+                return False
+        except:
+            return False
+        
+    def generate_meta(self, routines=None):
 
-	# Function to send a request to Fishfactory.
-	def request_to_fishfactory(self, url, tlp):
-		config = self.get_attribute('config')
-		extras = {}
-		if tlp:
-			extras['tlp'] = tlp
+        meta = {}
+        meta['timestamp'] = str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat())
+        meta['fishfactoryVersion'] = self.__version
+        meta['target'] = self.__target
+        if self.__tlp:
+            meta['tlp'] = self.__tlp
+        if self.__source:
+            meta['source'] = self.__source
+        if routines:
+            meta['attemptedRoutines'] = routines
+        if self.__requestor:
+            meta['requestor'] = self.__requestor
 
-		if config:
-			fishfactory_location = config['fishfactoryApiLocation']
-			extras['shodanApiKey'] = config['shodanApiKey']
-		else:
-			fishfactory_location = "localhost:5000"
-		if not fishfactory_location.startswith('http'):
-			fishfactory_location = "http://" + fishfactory_location
+        return meta
 
-		try:
-			response = requests.post(fishfactory_location + "/fishfactory/submit_url/", json={"url":url, "extras":extras}, timeout=150)
-			print(response.text)
-			response = json.loads(response.text)
-			if "records" in response.keys():
-				if response['records']:
-					elastic = self.get_attribute('elastic')
-					if elastic:
-						self.send_to_elastic(response)
-				
-		except Exception as e:
-			print("Error contacting the Fishfactory API. Ensure the service is active and reachable.")
-			print("Exception ocurred for url: " + url)
-			print("Exception encountered: " + str(e))
-			#quit()
+    def start(self):
 
-	# Function to send result documents to Elasticsearch.
-	def send_to_elastic(self, document):
-		config = self.get_attribute('config')
+        start = time.time()
+        alive = self.check_alive()
+        target = self.__target
 
-		if document['meta']['responseType'] == 'success':
-			r = requests.post(config['elasticUrl'].rstrip("/") +'/_doc', headers={'Authorization': 'ApiKey ' + config['elasticApiKey'], 'Content-Type': 'application/json'}, data=json.dumps(document), verify=False)
-			print(r.text)
+        record = {}
+        record['meta'] = self.generate_meta(routines=['reconaissance','brute','downloader'])
 
-if __name__ == "__main__":
+        if not alive:
+            record['meta']['status'] = "DNS error"
+            return record
+        else:
+            record['meta']['status'] = "success"
 
-	parser = argparse.ArgumentParser(prog='Fishfactory',description="Fishfactory is a utility for gathering intelligence, indicators and credentials from phishing infrastructure. This script interacts with the Fishfactory API, which should be running as a network service or via Docker.")
-	parser.add_argument('--config', '-c', action="store_true", default=False, required=False, help='Optional - generate config file via interactive prompt.')
-	parser.add_argument('--url', '-u', required=False, help='Optional - submit single URL to Fishfactory.')
-	parser.add_argument('--file', '-f', required=False, help='Optional - read URLs from a file and send to Fishfactory')
-	parser.add_argument('--elastic', '-e', action="store_true", default=False, required=False, help='Optional - send records to Elasticsearch using details from config file.')
-	parser.add_argument('--tlp', '-t', required=False, help='Optional - TLP designation to apply to record(s). Accepts RED, AMBER+STRICT, AMBER, GREEN, CLEAR.')
+        self.identify_relevant_submodules()
 
-	args = parser.parse_args()
+        pool = ThreadPool(processes=3)
 
-	if args.config:
-		gen_config()
-		quit()
+        async_basic_recon = pool.apply_async(routines.reconaissance.start, (target,))
+        async_kit_downloader = pool.apply_async(routines.downloader.start, (target,))
+        async_brute = pool.apply_async(routines.brute.start, (target,))
 
-	fishfactory = FishFactory(args.elastic)
+        basic_recon = async_basic_recon.get()
+        kit_downloader = async_kit_downloader.get()
+        brute = async_brute.get()
 
-	if args.tlp:
-		if args.tlp.upper() not in ['RED', 'AMBER+STRICT', 'AMBER', 'GREEN', 'CLEAR']:
-			print("Error - TLP designation only accepts values 'RED', 'AMBER+STRICT', 'AMBER', 'GREEN' and 'CLEAR'.")
-			quit()
+        if basic_recon == 1:
+            record['reconaissance'] = "exception"
+        elif basic_recon:
+            record['reconaissance'] = basic_recon
+        if kit_downloader:
+            record['phishingKits'] = kit_downloader
+        if brute:
+            record['bruteCredstores'] = brute
 
-	if args.url:
-		fishfactory.request_to_fishfactory(args.url, args.tlp)
+        end = time.time()
+        record['meta']['took'] = round(end - start)
 
-	if args.file:
-		with open(args.file, 'r') as f:
-			urls = f.read().splitlines()
-			for url in urls:
-				fishfactory.request_to_fishfactory(url, args.tlp)
+        return record
 
+    def reconaissance(self):
 
+        start = time.time()
+        record = {}
+        alive = self.check_alive()
 
+        record = {}
+        record['meta'] = self.generate_meta(routines=['reconaissance'])
+
+        if not alive:
+            record['meta']['status'] = "DNS error"
+            return
+        else:
+            record['meta']['status'] = "success"
+
+        record['reconaissance'] = routines.reconaissance.start(self.__target)
+        
+        end = time.time()
+        record['meta']['elapsed'] = round(end - start)
+
+        return record
+
+  
+        
+
+    

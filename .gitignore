@@ -1,10 +1,5 @@
-input_processor.py
-config.ini
-proxy-profiles
-aquarium
-iputs
-credstores/*
+config.json
 kits/*
-images/*
-tele
-kitprocessor/target/*
+credstores/*
+favicons/*
+screenshots/*

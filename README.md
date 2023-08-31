@@ -8,63 +8,29 @@ Fishfactory is currently in a functional prototype stage.
 
 # Features
 
-- Standard functions:
-	- conducts post-JavaScript execution reconnaissance of lure pages to obtain a screenshot and basic details such as SSL certificate and favicon
-	- walks back phishing URLs to find open directories and ZIP phishing kits
-		- processes files in kits to identify PHP mailers, direct writes to credential stores and Telegram bots
-			- downloads any credential stores found & processes victim emails
-	- runs a naive credential store finder against targets to look for common credential stores locations & processes victim emails from any credential stores found
-	- facilitates easy bulk inputs and transportation of documents to Elasticsearch
-- Additional, optional functions for special cases:
-	- for phishing infrastructure delivered via IPFS web gateways, uses [IPFSEnricher](https://github.com/oj-sec/IPFSEnricher) to identify the IP addresses pushing the phishing content content to the IPFS network as additional IOCs
-	- for phishing infrastructure behind Cloudflare, attempts to obtain candidates for the true IP address by querying the Shodan API for hosts bearing the same favicon and/or SSL certificate. Returns results if there are five or less hosts bearing the identifier. Requires a Shodan API key 
+- Standard modules:
+    - `reconaissance` uses Playwright broswer automation to gather information about phishing pages including:
+        - HTTP title
+        - screenshot of page content (SHA256 and phash)
+        - favicon murmurhash
+        - SSL thumbprint
+        - IP and domain
+    - `downloader` performs threaded directory enumeration requests to attempt to download and process ZIP phishing kits. Traverses archive files and extracts features including:
+        - email addresses 
+        - IP addresses
+        - Telegram bot tokens and chat ids
+        - references to text files, which Fisfactory will attempt to download and extract email and IP addresses from. 
+    - `brute` performs threaded directory enumeration using common credential store locations, which Fishfactory will download and process email and IP addresses from.
 
 # Installation
 
-Fishfactory is intended to be deployed via the included docker-compose file & prebuilt containers.  
+Fishfactory is intended to be deployed via docker-compose. Populate the `config_example.json` file and save it as `config.json`. 
 
-Pull the repository and run ```docker-compose up``` in the project directory. 
+Build the container with `docker build image -t fishfactory .`.
 
-The Fishfactory API will start listening on `localhost:5000`. The API's main endpoint,  `/fishfactory/submit_url`,  consumes a POSTed JSON dictionary and uses the value of key "url" as the target URL.
+Run the container with `docker-compose up`.
 
-A rudimentary webUI is also served at `/fishfactory`.
+// TODO
 
-# Usage
-
-Use the ```fishfactory.py``` script to interact with the Fishfactory web service:
-
-- Process a single URL using `python3 fishfactory.py -u "http://definitelynotmalicious.live"`
-- Read URLs from a newline delimited file using `python3 fishfactory.py -f inputfile.txt`
-
-Optional parameters are:
-
-- `-t [TLP]`, `--tlp [TLP]` add a [TLP designation](https://www.cisa.gov/tlp) to the record(s) produced. Accepts TLP 2.0 values `RED`, `AMBER+STRICT`, `AMBER`, `GREEN` and `CLEAR`.
-- `-e`, `--elastic` send results to Elasticsearch (see below)
-
-Alternatively, submit a single URL at a time via the webUI. No result forwarding is available for the webUI. 
-
-# Outputs
-
-`fishfactory.py` will output results to stdout by default, but will optionally also forward results to your Elasticsearch instance if the `-e` flag is passed.
-
-If you intend to use Elasticsearch, generate a configuration file using the interactive prompt via `python3 fishfactory.py -c`. You will need to specify your Elasticsearch API key and instance (including index endpoint) URI. The configuration file can also be used to specify a custom location for the Fishfactory API and provide your Shodan API key. Both features are included in the interactive prompt.
-
-Fishfactory will write file-based outputs to the `./kits`, `./credstores` and `./images` directories on the host via shared volumes. Note that these files will be owned by root as per normal docker behavior. 
-
-# Alerting 
-
-The `alerter.py` script can be used to emit alerts to a webhook receiver. Emitting alerts works by  querying your Elastic index for victim email addresses matching a query (e.g. a domain or TLD of interest) on a specified periodic cadence. Alerting requires that you are logging records to Elasticsearch via a validly configured `config.ini` file. 
-
-The `alerter.py` script should be set to run via a cron job or similar scheduled execution. The config file generation flag (`-c`) can be used to prepare a configuration file for alerting. Current alerting options are:
-
-- Microsoft Teams webhook alert via adaptive card (`"alertTargetType": "ms-teams-webhook"`)
-
-Note that the functionality of `alerter.py` can be wholly replaced with Elastic's premium altering features if you have them available to you. 
-
-# Planned features
-
-- sample Kibana dashboard
-- improving Cloudflare deanonymisation techniques
-- enriching details obtained from Telegram bots via the Telegram API
-- attempting to identify adversary-in-the-middle and related, sophisticated phishing techniques
-- machine learning image classification on lure screenshots
+- phash
+- dedup processor results

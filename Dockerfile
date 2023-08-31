@@ -1,7 +1,11 @@
-# docker image build -t 0jsec/fishfactory
+# docker image build -t fishfactory .
 
-# base image
-FROM python:3.12.0a3-bullseye
+# base image - must be python3.10 due to greenlet make errors
+FROM mcr.microsoft.com/playwright/python:v1.37.0-jammy
+
+# Update
+RUN apt-get update -y
+RUN apt-get install -y python3 pip
 
 # copy the pip requirements file into the image
 COPY ./requirements.txt /app/requirements.txt
@@ -17,4 +21,4 @@ COPY . /app
 
 # set entrypoint & run
 ENTRYPOINT [ "python" ]
-CMD ["fishfactory_API.py" ]
+CMD ["fishfactory_api.py" ]

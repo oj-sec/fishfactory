@@ -1,6 +1,6 @@
-scrapy==2.7.1
-scrapy-splash==0.8.0
-scrapyscript==1.1.5
-Flask==2.2.2
+Flask
 mmh3==3.0.0
-dnspython==2.3.0
+requests
+flask-jwt-extended
+bs4
+playwright
