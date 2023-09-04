@@ -7,6 +7,7 @@ import re
 from multiprocessing.pool import ThreadPool
 import datetime
 import time
+from PIL import Image
 
 import routines.reconaissance
 import routines.downloader
@@ -106,7 +107,7 @@ class Fishfactory:
         brute = async_brute.get()
 
         if basic_recon == 1:
-            record['reconaissance'] = "exception"
+            record['reconaissance'] = {"status":"exception"}
         elif basic_recon:
             record['reconaissance'] = basic_recon
         if kit_downloader:

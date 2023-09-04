@@ -1,6 +1,8 @@
 Flask
-mmh3==3.0.0
+mmh3
 requests
 flask-jwt-extended
 bs4
 playwright
+imagehash
+pillow

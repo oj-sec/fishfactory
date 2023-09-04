@@ -8,6 +8,9 @@ import base64
 import mmh3
 import socket
 import ssl
+import imagehash
+from PIL import Image
+import io
 
 def run(playwright, target, timeout=20000) -> None:
 
@@ -17,7 +20,9 @@ def run(playwright, target, timeout=20000) -> None:
     page.set_default_timeout(timeout)
 
     stored_headers = []
+    stored_requests = []
     page.on("request", lambda request: stored_headers.append(request.headers))
+    page.on("request", lambda request: stored_headers.append(request.url))
 
     observations = {}
 
@@ -30,13 +35,17 @@ def run(playwright, target, timeout=20000) -> None:
     screenshot_data = (page.screenshot(full_page=True))
     screenshot_hash = hashlib.sha256(screenshot_data).hexdigest()
 
+    phash = str(imagehash.phash(Image.open(io.BytesIO(screenshot_data))))
+
     with open(f"screenshots/{screenshot_hash}", 'wb') as s:
         s.write(screenshot_data)
     
     observations['screenshotHash'] = screenshot_hash
+    observations['perceptualHash'] = phash
     observations['faviconData'] = retrieve_favicons(page, stored_headers[0])
     ssl_fingerprint = get_ssl_fingerprint(page)
     observations['sslFingerprint'] = ssl_fingerprint
+    observations['requestsMade'] = stored_requests
 
     domain = urlparse(target).netloc
     ip = socket.gethostbyname(domain)
@@ -142,7 +151,7 @@ def start(target, config=None):
 
     with sync_playwright() as playwright:
 
-        try:
-            return run(playwright, target)
-        except:
-            return 1
+        #try:
+        return run(playwright, target)
+        #except:
+        #    return 1
