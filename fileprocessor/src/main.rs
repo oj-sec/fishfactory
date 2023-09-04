@@ -193,6 +193,18 @@ fn process_features_from_files(target_files:Vec<PathBuf>) -> Vec<FileResult> {
             
         }
 
+        //deduplicate vectors
+        email_re_captures.sort_unstable();
+        email_re_captures.dedup();
+        txt_file_re_captures.sort_unstable();
+        txt_file_re_captures.dedup();
+        telegram_token_re_captures.sort_unstable();
+        telegram_token_re_captures.dedup();
+        telegram_chat_id_re_captures.sort_unstable();
+        telegram_chat_id_re_captures.dedup();
+        ip_regex_captures.sort_unstable();
+        ip_regex_captures.dedup();
+
         let file_result = FileResult {
             filename: file_name.clone(),
             emailAddresses: email_re_captures.clone(),

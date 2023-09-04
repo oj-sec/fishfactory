@@ -151,7 +151,7 @@ def start(target, config=None):
 
     with sync_playwright() as playwright:
 
-        #try:
-        return run(playwright, target)
-        #except:
-        #    return 1
+        try:
+            return run(playwright, target)
+        except:
+            return 1
