@@ -6,19 +6,24 @@ Fishfactory is currently in a functional prototype stage.
 
 # Features
 
-- Standard modules:
+- Modules:
     - `reconaissance` uses Playwright broswer automation to gather information about phishing pages including:
         - HTTP title
-        - screenshot of page content (SHA256 and phash)
-        - favicon murmurhash
+        - obatins a screenshot of page content
+            - provides SHA256 and perceptual hash
+        - obtains favicons
+            - provides the murmurhash
         - SSL thumbprint
         - IP and domain
+        - all requests made during page load
     - `downloader` performs threaded directory enumeration requests to attempt to download and process ZIP phishing kits. Traverses archive files and extracts features including:
         - email addresses 
         - IP addresses
         - Telegram bot tokens and chat ids
-        - references to text files, which Fisfactory will attempt to download and extract email and IP addresses from. 
+        - references to text files, which Fisfactory will attempt to download and extract email and IP addresses from
+        - also provides kit URI and SHA256 hash 
     - `brute` performs threaded directory enumeration using common credential store locations, which Fishfactory will download and process email and IP addresses from.
+        - also provides credstore URI and SHA256 hash
 
 # Installation
 
@@ -28,7 +33,12 @@ Build the container with `docker build image -t fishfactory .`.
 
 Run the container with `docker-compose up`.
 
-// TODO
+# Usage
 
-- phash
-- dedup processor results
+Generate an API key using `./utils/generate_api_key.py`.
+
+Submit URIs to the Fishfactory webservice my making POST requests to `localhost:5000/fishfactory/submit`. POST bodies should contain the target URI as the `url` key and may optionally also contain `tlp` and `source`, which will be captured in the resulting record. POST requests must also contain  an Authorization header with the API key prefixed by "Bearer ".
+
+
+
+

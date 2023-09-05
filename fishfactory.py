@@ -7,7 +7,6 @@ import re
 from multiprocessing.pool import ThreadPool
 import datetime
 import time
-from PIL import Image
 
 import routines.reconaissance
 import routines.downloader

@@ -21,8 +21,8 @@ def run(playwright, target, timeout=20000) -> None:
 
     stored_headers = []
     stored_requests = []
+    page.on("request", lambda request: stored_requests.append(request.url))
     page.on("request", lambda request: stored_headers.append(request.headers))
-    page.on("request", lambda request: stored_headers.append(request.url))
 
     observations = {}
 
@@ -41,11 +41,11 @@ def run(playwright, target, timeout=20000) -> None:
         s.write(screenshot_data)
     
     observations['screenshotHash'] = screenshot_hash
-    observations['perceptualHash'] = phash
+    observations['screenshotPerceptualHash'] = phash
     observations['faviconData'] = retrieve_favicons(page, stored_headers[0])
     ssl_fingerprint = get_ssl_fingerprint(page)
     observations['sslFingerprint'] = ssl_fingerprint
-    observations['requestsMade'] = stored_requests
+    observations['requestsMade'] = list(dict.fromkeys(stored_requests))
 
     domain = urlparse(target).netloc
     ip = socket.gethostbyname(domain)
