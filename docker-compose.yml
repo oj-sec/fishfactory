@@ -7,5 +7,6 @@ services:
         # Unmap these volumes to prevent storage of files on the host filesystem.
         volumes:
             - ./kits:/app/kits
-            - ./images:/app/images
+            - ./screenshots:/app/screenshots
             - ./credstores:/app/credstores
+            - ./favicons:/app/favicons

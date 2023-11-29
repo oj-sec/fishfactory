@@ -37,7 +37,7 @@ def run(playwright, target, timeout=20000) -> None:
 
     phash = str(imagehash.phash(Image.open(io.BytesIO(screenshot_data))))
 
-    with open(f"screenshots/{screenshot_hash}", 'wb') as s:
+    with open(f"./screenshots/{screenshot_hash}", 'wb') as s:
         s.write(screenshot_data)
     
     observations['screenshotHash'] = screenshot_hash
@@ -116,7 +116,7 @@ def download_favicons(candidates, headers):
                         temp['faviconUrl'] = url
                         temp['faviconHash'] = favicon_hash
                         favicon_data.append(temp)
-                        with open(f"favicons/{favicon_hash}", 'wb') as f:
+                        with open(f"./favicons/{favicon_hash}", 'wb') as f:
                             f.write(base64.b64decode(favicon_data_encoded))
         except:
             pass
